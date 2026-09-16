@@ -46,7 +46,7 @@ export function CardComposer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-lg border border-dashed border-edge px-4 py-3 text-sm text-muted transition hover:border-zinc-500 hover:text-foreground"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-edge bg-surface/50 px-4 py-4 text-sm font-medium text-muted transition hover:border-accent hover:text-foreground"
       >
         + Add feedback on {sectionName}
       </button>
@@ -57,7 +57,7 @@ export function CardComposer({
     <form
       ref={formRef}
       action={action}
-      className="rounded-lg border border-edge bg-surface p-4"
+      className="panel p-4"
     >
       <input type="hidden" name="section_id" value={sectionId} />
       <input type="hidden" name="type" value={type} />
@@ -93,7 +93,7 @@ export function CardComposer({
         required
         maxLength={200}
         placeholder="One line summary"
-        className="mt-3 w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+        className="mt-3 w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
       />
       {fields.body !== "hidden" && (
         <textarea
@@ -102,7 +102,7 @@ export function CardComposer({
           maxLength={5000}
           required={fields.body === "required"}
           placeholder={label("Details", fields.body)}
-          className="mt-2 w-full resize-y rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className="mt-2 w-full resize-y rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
         />
       )}
       {(fields.mediaUrl !== "hidden" || fields.authorName !== "hidden") && (
@@ -113,7 +113,7 @@ export function CardComposer({
               type="url"
               required={fields.mediaUrl === "required"}
               placeholder={label("Clip or image link", fields.mediaUrl)}
-              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
             />
           )}
           {fields.authorName !== "hidden" && (
@@ -124,7 +124,7 @@ export function CardComposer({
               value={name ?? storedName}
               onChange={(e) => setName(e.target.value)}
               placeholder={label("Your name", fields.authorName)}
-              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
             />
           )}
         </div>
@@ -140,7 +140,7 @@ export function CardComposer({
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-50"
+          className="btn-primary rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50"
         >
           {pending ? "Posting..." : "Post"}
         </button>

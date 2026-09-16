@@ -122,7 +122,7 @@ export function BoardSettings({
               defaultValue={name}
               required
               maxLength={80}
-              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
             />
           </Field>
           <Field label="Subtitle" hint="Optional">
@@ -130,7 +130,7 @@ export function BoardSettings({
               name="subtitle"
               defaultValue={subtitle ?? ""}
               maxLength={120}
-              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
             />
           </Field>
           <Submit pending={detailPending}>Save details</Submit>
@@ -184,7 +184,7 @@ export function BoardSettings({
               type="text"
               autoComplete="off"
               placeholder={hasPassword ? "Unchanged" : "Set a password"}
-              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
             />
           </Field>
 
@@ -292,7 +292,7 @@ export function BoardSettings({
             required
             autoComplete="off"
             placeholder="Their GitHub username"
-            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
           />
           <Submit pending={adminPending}>Add admin</Submit>
         </form>
@@ -320,7 +320,7 @@ export function BoardSettings({
       </Panel>
 
       {isPrimaryOwner && (
-        <section className="rounded-lg border border-rose-500/40 bg-surface p-5">
+        <section className="panel p-5 border-rose-500/40">
           <h2 className="mb-1 text-lg font-medium">Delete this board</h2>
           <p className="mb-4 text-sm text-muted">
             Removes {name}, its {cardCount}{" "}
@@ -414,7 +414,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-edge bg-surface p-5">
+    <section className="panel p-5">
       <h2 className="mb-4 text-lg font-medium">{title}</h2>
       {children}
     </section>
@@ -454,7 +454,7 @@ function Submit({
     <button
       type="submit"
       disabled={pending}
-      className="rounded bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-50"
+      className="btn-primary rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50"
     >
       {pending ? "Saving..." : children}
     </button>

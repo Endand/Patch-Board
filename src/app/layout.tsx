@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeToggle, THEME_SCRIPT } from "@/components/ThemeToggle";
 import { AccountMenu } from "@/components/AccountMenu";
+import { Logo } from "@/components/Logo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,8 +18,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Patch Board",
-  description: "Structured, colour coded feedback boards. No account needed.",
+  title: {
+    default: "Patch Board",
+    template: "%s · Patch Board",
+  },
+  description:
+    "Structured, colour coded feedback boards. Anyone can post, no account needed.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -30,29 +35,53 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         {/* Sets the theme attribute before hydration, so a chosen theme never
-            flashes the other way on load. A raw <script> element would warn
-            here, next/script injects it into the initial HTML instead. */}
+            flashes the other way on load. */}
         <Script id="pb-theme" strategy="beforeInteractive">
           {THEME_SCRIPT}
         </Script>
-        <header className="border-b border-edge">
-          <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-3">
-            <Link href="/" className="font-medium tracking-tight">
-              Patch Board
+
+        <header className="sticky top-0 z-30 border-b border-edge bg-background/80 backdrop-blur-md">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-2 whitespace-nowrap font-semibold tracking-tight"
+            >
+              <Logo />
+              <span className="hidden sm:inline">Patch Board</span>
             </Link>
-            <div className="ml-auto flex items-center gap-3">
+            <nav className="ml-auto flex items-center gap-3 sm:gap-4">
               <Link
                 href="/new"
-                className="text-sm text-muted transition hover:text-foreground"
+                className="whitespace-nowrap text-sm text-muted transition hover:text-foreground"
               >
                 New board
               </Link>
               <AccountMenu />
               <ThemeToggle />
-            </div>
+            </nav>
           </div>
         </header>
+
         <div className="flex-1">{children}</div>
+
+        <footer className="border-t border-edge">
+          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6">
+            <span className="flex items-center gap-1.5">
+              <Logo size={16} />
+              Patch Board
+            </span>
+            <span aria-hidden>·</span>
+            <span>Feedback boards that anyone can post to.</span>
+            <a
+              href="https://github.com/Endand/Patch-Board"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto transition hover:text-foreground"
+            >
+              Source
+            </a>
+          </div>
+        </footer>
       </body>
     </html>
   );

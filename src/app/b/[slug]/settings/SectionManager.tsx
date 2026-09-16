@@ -35,7 +35,7 @@ export function SectionManager({
   >((prev, formData) => addSection(slug, prev, formData), null);
 
   return (
-    <section className="rounded-lg border border-edge bg-surface p-5">
+    <section className="panel p-5">
       <h2 className="mb-1 text-lg font-medium">Sections</h2>
       <p className="mb-4 text-sm text-muted">
         The board was generated from a template. Add whatever the template does
@@ -62,14 +62,14 @@ export function SectionManager({
             required
             maxLength={60}
             placeholder="Section name"
-            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
           />
           <input
             name="group_name"
             list="pb-groups"
             maxLength={40}
             placeholder="Group, optional"
-            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
           />
           <datalist id="pb-groups">
             {groups.map((group) => (
@@ -79,7 +79,7 @@ export function SectionManager({
           <button
             type="submit"
             disabled={addPending}
-            className="rounded bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-50"
+            className="btn-primary rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50"
           >
             {addPending ? "Adding..." : "Add"}
           </button>
@@ -144,7 +144,7 @@ function Row({
                 return result;
               })
             }
-            className="rounded bg-foreground px-2 py-1 text-xs font-medium text-background"
+            className="btn-primary rounded px-2 py-1 text-xs font-medium"
           >
             Save
           </button>

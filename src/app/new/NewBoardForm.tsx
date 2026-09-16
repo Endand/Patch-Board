@@ -33,7 +33,7 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
 
   if (state?.ok) {
     return (
-      <div className="rounded-lg border border-edge bg-surface p-5">
+      <div className="panel p-5">
         <h2 className="font-medium">Board created</h2>
         <p className="mt-2 text-sm text-muted">
           The board belongs to your account, so you do not need this to
@@ -45,7 +45,7 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
         </p>
         <Link
           href={`/b/${state.slug}`}
-          className="mt-4 inline-block rounded bg-foreground px-4 py-2 text-sm font-medium text-background"
+          className="mt-4 inline-block btn-primary rounded-lg px-4 py-2 text-sm font-medium"
         >
           Open the board
         </Link>
@@ -61,7 +61,7 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
           required
           maxLength={80}
           placeholder="Raiden"
-          className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
         />
       </Field>
 
@@ -70,7 +70,7 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
           name="subtitle"
           maxLength={120}
           placeholder="Metal Gear Rising"
-          className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
         />
       </Field>
 
@@ -122,7 +122,7 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
             type="text"
             required
             autoComplete="off"
-            className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
           />
         </Field>
       )}
@@ -136,7 +136,7 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+        className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
       >
         {pending ? "Creating..." : "Create board"}
       </button>

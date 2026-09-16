@@ -62,7 +62,7 @@ export function BoardGrid({
 
   return (
     <>
-      <div className="mb-5 flex flex-wrap items-center gap-2">
+      <div className="sticky top-[57px] z-20 mb-6 -mx-2 flex flex-wrap items-center gap-2 rounded-lg bg-background/85 px-2 py-2.5 backdrop-blur-md">
         {CARD_TYPES.filter((type) => totals.has(type)).map((type) => {
           const meta = CARD_TYPE_META[type];
           const on = active.has(type);
@@ -164,8 +164,8 @@ function SectionCard({
   return (
     <Link
       href={`/b/${slug}/s/${section.id}`}
-      className={`block rounded-lg border border-edge bg-surface p-4 transition hover:border-zinc-500 ${
-        empty ? "opacity-55 hover:opacity-100" : ""
+      className={`panel lift block p-4 ${
+        empty ? "opacity-60 hover:opacity-100" : ""
       }`}
     >
       <div className="flex items-baseline justify-between gap-2">

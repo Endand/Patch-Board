@@ -1,15 +1,19 @@
 @import "tailwindcss";
 
 /* Light is the default. The dark palette is applied either by an explicit
-   [data-theme="dark"] from the toggle, or by system preference when the user
-   has not chosen. Both paths set the same variables. */
+   [data-theme="dark"] from the toggle, or by system preference when nobody
+   has chosen. Both paths set the same variables. */
 :root {
-  --background: #ffffff;
-  --surface: #f7f8f9;
-  --surface-2: #ffffff;
-  --foreground: #16181c;
-  --border: #e3e6ea;
-  --muted: #666d78;
+  --background: #fbfbfc;
+  --surface: #ffffff;
+  --surface-2: #f4f5f7;
+  --foreground: #14161a;
+  --border: #e4e6ea;
+  --border-strong: #d2d6dc;
+  --muted: #646b76;
+  --accent: #4f46e5;
+  --accent-contrast: #ffffff;
+  --accent-soft: #eef0fe;
 
   --praise: #047857;
   --balance: #a16207;
@@ -18,18 +22,25 @@
   --polish: #0369a1;
   --question: #52525b;
 
-  --chip-bg: 12%;
-  --chip-ring: 30%;
+  --chip-bg: 10%;
+  --chip-ring: 26%;
+
+  --shadow-card: 0 1px 2px rgb(16 18 22 / 0.04), 0 1px 3px rgb(16 18 22 / 0.06);
+  --shadow-lift: 0 4px 12px rgb(16 18 22 / 0.08), 0 2px 4px rgb(16 18 22 / 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: #0b0c0e;
-    --surface: #141619;
-    --surface-2: #0b0c0e;
-    --foreground: #e9eaec;
-    --border: #24272c;
-    --muted: #8b9199;
+    --background: #0a0b0d;
+    --surface: #131519;
+    --surface-2: #0f1114;
+    --foreground: #e8eaed;
+    --border: #23262c;
+    --border-strong: #32363e;
+    --muted: #8d949f;
+    --accent: #818cf8;
+    --accent-contrast: #14161a;
+    --accent-soft: #1b1d2e;
 
     --praise: #34d399;
     --balance: #fbbf24;
@@ -38,18 +49,25 @@
     --polish: #38bdf8;
     --question: #a1a1aa;
 
-    --chip-bg: 15%;
-    --chip-ring: 30%;
+    --chip-bg: 14%;
+    --chip-ring: 28%;
+
+    --shadow-card: none;
+    --shadow-lift: 0 8px 24px rgb(0 0 0 / 0.4);
   }
 }
 
 :root[data-theme="dark"] {
-  --background: #0b0c0e;
-  --surface: #141619;
-  --surface-2: #0b0c0e;
-  --foreground: #e9eaec;
-  --border: #24272c;
-  --muted: #8b9199;
+  --background: #0a0b0d;
+  --surface: #131519;
+  --surface-2: #0f1114;
+  --foreground: #e8eaed;
+  --border: #23262c;
+  --border-strong: #32363e;
+  --muted: #8d949f;
+  --accent: #818cf8;
+  --accent-contrast: #14161a;
+  --accent-soft: #1b1d2e;
 
   --praise: #34d399;
   --balance: #fbbf24;
@@ -58,8 +76,11 @@
   --polish: #38bdf8;
   --question: #a1a1aa;
 
-  --chip-bg: 15%;
-  --chip-ring: 30%;
+  --chip-bg: 14%;
+  --chip-ring: 28%;
+
+  --shadow-card: none;
+  --shadow-lift: 0 8px 24px rgb(0 0 0 / 0.4);
 }
 
 @theme inline {
@@ -68,7 +89,11 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-edge: var(--border);
+  --color-edge-strong: var(--border-strong);
   --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-accent-soft: var(--accent-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -77,10 +102,26 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings read tighter than Tailwind's defaults, which is most of what
+   separates a designed page from a default one. */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.017em;
+}
+
+/* One visible focus treatment everywhere, rather than the browser's. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* Card type colours. One variable per type drives the chip, the ring and the
-   card edge, so a theme swap only has to redefine six values. */
+   card edge, so a theme swap only redefines six values. */
 .chip {
   background: color-mix(in srgb, var(--type) var(--chip-bg), transparent);
   color: var(--type);
@@ -96,3 +137,49 @@ body {
 .t-bug { --type: var(--bug); }
 .t-polish { --type: var(--polish); }
 .t-question { --type: var(--question); }
+
+/* Shared surfaces, so panels and cards stay consistent across pages. */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+.lift {
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
+}
+.lift:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  transition: filter 140ms ease;
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* A faint grid behind the landing hero. Purely decorative, and it fades out
+   so it never competes with the text. */
+.hero-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--border) 60%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--border) 60%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+}

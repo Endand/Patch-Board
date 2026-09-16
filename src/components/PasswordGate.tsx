@@ -38,7 +38,7 @@ export function PasswordGate({
   return (
     <form
       action={action}
-      className="rounded-lg border border-edge bg-surface p-5"
+      className="panel p-5"
     >
       <h2 className="font-medium">{copy.title(boardName)}</h2>
       <p className="mt-1 text-sm text-muted">{copy.hint}</p>
@@ -50,12 +50,12 @@ export function PasswordGate({
           required
           autoComplete="off"
           placeholder={copy.placeholder}
-          className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+          className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
           {pending ? "Checking..." : copy.button}
         </button>

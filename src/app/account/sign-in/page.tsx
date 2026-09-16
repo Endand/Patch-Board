@@ -29,12 +29,12 @@ export default async function SignInPage({
 
       <form
         action={signInWithGitHub}
-        className="rounded-lg border border-edge bg-surface p-5"
+        className="panel p-5"
       >
         <input type="hidden" name="next" value={destination} />
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded bg-foreground px-4 py-2.5 text-sm font-medium text-background"
+          className="btn-primary flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium"
         >
           <GitHubMark />
           Continue with GitHub

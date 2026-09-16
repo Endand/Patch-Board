@@ -12,7 +12,7 @@ export function ClaimForm({ slug }: { slug: string }) {
   return (
     <form
       action={action}
-      className="rounded-lg border border-edge bg-surface p-5"
+      className="panel p-5"
     >
       <div className="flex flex-wrap gap-2">
         <input
@@ -21,12 +21,12 @@ export function ClaimForm({ slug }: { slug: string }) {
           required
           autoComplete="off"
           placeholder="Owner secret"
-          className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+          className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
           {pending ? "Checking..." : "Claim board"}
         </button>
