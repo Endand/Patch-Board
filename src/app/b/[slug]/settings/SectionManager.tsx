@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { GroupPicker } from "./GroupPicker";
 import {
   addSection,
   deleteSection,
@@ -29,10 +30,15 @@ export function SectionManager({
     ...new Set(sections.map((s) => s.group_name).filter(Boolean)),
   ] as string[];
 
+  const [newGroup, setNewGroup] = useState("");
   const [addState, addAction, addPending] = useActionState<
     SectionResult | null,
     FormData
-  >((prev, formData) => addSection(slug, prev, formData), null);
+  >(async (prev, formData) => {
+    const result = await addSection(slug, prev, formData);
+    if (result.ok) setNewGroup("");
+    return result;
+  }, null);
 
   return (
     <section className="panel p-5">
@@ -48,6 +54,7 @@ export function SectionManager({
             key={section.id}
             slug={slug}
             section={section}
+            groups={groups}
             first={i === 0}
             last={i === sections.length - 1}
           />
@@ -64,18 +71,13 @@ export function SectionManager({
             placeholder="Section name"
             className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
           />
-          <input
+          <GroupPicker
+            id="pb-add-group"
             name="group_name"
-            list="pb-groups"
-            maxLength={40}
-            placeholder="Group, optional"
-            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
+            groups={groups}
+            value={newGroup}
+            onChange={setNewGroup}
           />
-          <datalist id="pb-groups">
-            {groups.map((group) => (
-              <option key={group} value={group} />
-            ))}
-          </datalist>
           <button
             type="submit"
             disabled={addPending}
@@ -93,11 +95,13 @@ export function SectionManager({
 function Row({
   slug,
   section,
+  groups,
   first,
   last,
 }: {
   slug: string;
   section: ManagedSection;
+  groups: string[];
   first: boolean;
   last: boolean;
 }) {
@@ -121,13 +125,11 @@ function Row({
             maxLength={60}
             className="min-w-0 flex-1 rounded border border-edge bg-surface px-2 py-1 text-sm"
           />
-          <input
+          <GroupPicker
+            id={`pb-group-${section.id}`}
+            groups={groups}
             value={group}
-            onChange={(e) => setGroup(e.target.value)}
-            list="pb-groups"
-            maxLength={40}
-            placeholder="Group"
-            className="min-w-0 flex-1 rounded border border-edge bg-surface px-2 py-1 text-sm"
+            onChange={setGroup}
           />
           <button
             type="button"
