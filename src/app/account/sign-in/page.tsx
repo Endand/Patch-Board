@@ -67,9 +67,13 @@ export default async function SignInPage({
         </p>
         <p className="mt-1">
           Use the same service you signed in with before. Picking the other one
-          creates a second, separate account that owns none of your boards. To
-          use both, sign in the usual way first, then link the other from your
-          account page.
+          creates a second, separate account that owns none of your boards, and
+          once it exists it holds that service, so the two cannot be joined
+          afterwards without deleting one of them.
+        </p>
+        <p className="mt-2">
+          To use both, sign in the usual way first, then link the other from
+          your account page.
         </p>
       </div>
     </main>

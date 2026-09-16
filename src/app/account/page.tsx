@@ -65,10 +65,15 @@ export default async function AccountPage({
 
       <section className="panel p-5">
         <h2 className="mb-1 text-lg font-medium">Ways to sign in</h2>
+        <p className="mb-2 text-sm text-muted">
+          Link both and either one signs you into this account, with the same
+          boards.
+        </p>
         <p className="mb-4 text-sm text-muted">
-          Link both and either one gets you into this same account, with the
-          same boards. Signing in with an unlinked service creates a separate
-          account instead.
+          A service can only be linked while no other account holds it. If you
+          have already signed in with it on its own, that made a second account
+          which now owns it, and linking cannot move it across. Delete that
+          account first, then link.
         </p>
 
         <ul className="space-y-2">
