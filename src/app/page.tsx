@@ -9,6 +9,9 @@ export default async function Home() {
     .from("boards")
     .select("id, slug, name, subtitle, visibility")
     .eq("is_listed", true)
+    // Private boards stay off the index. Their name alone is a leak, and
+    // anyone meant to see one has the link.
+    .neq("visibility", "private")
     .order("created_at", { ascending: true });
 
   const boards = (data ?? []) as Board[];
@@ -59,7 +62,7 @@ export default async function Home() {
             return (
               <li key={type} className="flex items-baseline gap-3 text-sm">
                 <span
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${meta.chip}`}
+                  className={`chip ${meta.tone} inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium`}
                 >
                   <span aria-hidden>{meta.glyph}</span>
                   {meta.label}

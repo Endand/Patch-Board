@@ -25,9 +25,28 @@ movesets, one board per fighter. The product itself is not Smash specific.
 
 ## Access
 
-There are no user accounts. Posting is anonymous. Each board carries its own
-password and one of three visibility levels: public, read only public, or
-private. Password checks run server side only.
+There are no user accounts. Posting is anonymous, identified only by a random
+key kept in the browser, which is a convenience for editing your own cards and
+never a permission.
+
+Each board has one of three visibility levels:
+
+| Level            | Read           | Post           |
+| ---------------- | -------------- | -------------- |
+| Public           | anyone         | anyone         |
+| Read only public | anyone         | password       |
+| Private          | password       | password       |
+
+Passwords are hashed with scrypt. Every table has row level security enabled
+with no policies, so the anon key can read nothing at all and every query runs
+through a server action that checks the grant first. A successful unlock stores
+a signed cookie scoped to that one board.
+
+Each board also has a separate owner secret, shown once at creation, which
+unlocks moderation: changing card status and deleting anyone's card.
+
+Creating a board requires the site wide `ADMIN_SECRET`. Everything else is
+open.
 
 ## Stack
 
@@ -37,7 +56,10 @@ Next.js (App Router) and Supabase, deployed on Vercel.
 
 ```bash
 npm install
+cp .env.example .env.local   # then fill it in
 npm run dev
 ```
 
-Database schema lives in `supabase/migrations`.
+Database schema lives in `supabase/migrations`, applied through the Supabase
+SQL editor. `npm run seed` loads the Smash Fighter template and is safe to
+re-run: it rewrites the template sections and skips boards that already exist.

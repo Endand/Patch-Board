@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/supabase";
+import { canRead, canWrite, grantFor, isOwner, loadBoard } from "@/lib/access";
 import {
   CARD_TYPES,
   CARD_TYPE_META,
   groupSections,
-  type Board,
   type Card,
   type CardType,
   type Section,
 } from "@/lib/cards";
+import { PasswordGate } from "@/components/PasswordGate";
+import { BoardFilters } from "@/components/BoardFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -20,17 +22,18 @@ export default async function BoardPage({
 }) {
   const { slug } = await params;
 
-  const { data: board } = await db
-    .from("boards")
-    .select("id, slug, name, subtitle, visibility")
-    .eq("slug", slug)
-    .maybeSingle<Board>();
-
+  const board = await loadBoard(slug);
   if (!board) notFound();
 
-  // Private boards are gated in a later pass. Until the password flow exists,
-  // refuse to render them rather than leaking their contents.
-  if (board.visibility === "private") notFound();
+  const grant = await grantFor(board);
+
+  if (!canRead(grant)) {
+    return (
+      <main className="mx-auto w-full max-w-lg px-6 py-20">
+        <PasswordGate slug={slug} boardName={board.name} reason="read" />
+      </main>
+    );
+  }
 
   const [{ data: sectionRows }, { data: cardRows }] = await Promise.all([
     db
@@ -42,7 +45,7 @@ export default async function BoardPage({
     db
       .from("cards")
       .select(
-        "id, section_id, type, status, title, body, author_name, vote_count, created_at",
+        "id, section_id, type, status, title, body, media_url, author_name, author_key, vote_count, created_at",
       )
       .eq("board_id", board.id)
       .order("vote_count", { ascending: false }),
@@ -65,7 +68,7 @@ export default async function BoardPage({
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12">
-      <header className="mb-10">
+      <header className="mb-8">
         <Link href="/" className="text-sm text-muted hover:text-foreground">
           &larr; All boards
         </Link>
@@ -81,6 +84,7 @@ export default async function BoardPage({
           <p className="text-sm text-muted">
             {cards.length} {cards.length === 1 ? "note" : "notes"} across{" "}
             {sections.length} sections
+            {isOwner(grant) && " · owner"}
           </p>
         </div>
 
@@ -89,7 +93,7 @@ export default async function BoardPage({
             {totals.map(({ type, count }) => (
               <li
                 key={type}
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${CARD_TYPE_META[type].chip}`}
+                className={`chip ${CARD_TYPE_META[type].tone} inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium`}
               >
                 <span aria-hidden>{CARD_TYPE_META[type].glyph}</span>
                 {CARD_TYPE_META[type].label}
@@ -98,11 +102,17 @@ export default async function BoardPage({
             ))}
           </ul>
         )}
+
+        {!canWrite(grant) && (
+          <div className="mt-5">
+            <PasswordGate slug={slug} boardName={board.name} reason="write" />
+          </div>
+        )}
       </header>
 
-      <div className="space-y-10">
+      <BoardFilters>
         {groupSections(sections).map((group, i) => (
-          <section key={group.name ?? `ungrouped-${i}`}>
+          <section key={group.name ?? `ungrouped-${i}`} className="pb-group">
             {group.name && (
               <h2 className="mb-3 text-xs font-medium uppercase tracking-widest text-muted">
                 {group.name}
@@ -112,6 +122,7 @@ export default async function BoardPage({
               {group.sections.map((section) => (
                 <SectionCard
                   key={section.id}
+                  slug={slug}
                   section={section}
                   cards={bySection.get(section.id) ?? []}
                 />
@@ -119,25 +130,40 @@ export default async function BoardPage({
             </div>
           </section>
         ))}
-      </div>
+      </BoardFilters>
     </main>
   );
 }
 
-function SectionCard({ section, cards }: { section: Section; cards: Card[] }) {
+function SectionCard({
+  slug,
+  section,
+  cards,
+}: {
+  slug: string;
+  section: Section;
+  cards: Card[];
+}) {
   const counts = new Map<CardType, number>();
   for (const card of cards) {
     counts.set(card.type, (counts.get(card.type) ?? 0) + 1);
   }
+  const empty = cards.length === 0;
 
   return (
-    <div className="rounded-lg border border-edge bg-surface p-4">
+    <Link
+      href={`/b/${slug}/s/${section.id}`}
+      data-empty={empty ? "true" : "false"}
+      className={`pb-section block rounded-lg border border-edge bg-surface p-4 transition hover:border-zinc-500 ${
+        empty ? "opacity-55 hover:opacity-100" : ""
+      }`}
+    >
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="font-medium">{section.name}</h3>
         <span className="text-xs text-muted">{cards.length || ""}</span>
       </div>
 
-      {cards.length === 0 ? (
+      {empty ? (
         <p className="mt-3 text-sm text-muted">No feedback yet.</p>
       ) : (
         <>
@@ -146,7 +172,7 @@ function SectionCard({ section, cards }: { section: Section; cards: Card[] }) {
               <li
                 key={type}
                 title={`${counts.get(type)} ${CARD_TYPE_META[type].label}`}
-                className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${CARD_TYPE_META[type].chip}`}
+                className={`chip ${CARD_TYPE_META[type].tone} inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium`}
               >
                 <span aria-hidden>{CARD_TYPE_META[type].glyph}</span>
                 {counts.get(type)}
@@ -157,23 +183,21 @@ function SectionCard({ section, cards }: { section: Section; cards: Card[] }) {
             {cards.slice(0, 4).map((card) => (
               <li
                 key={card.id}
-                className="relative overflow-hidden rounded border border-edge bg-background py-1.5 pl-3 pr-2 text-sm"
+                className="relative overflow-hidden rounded border border-edge bg-surface-2 py-1.5 pl-3 pr-2 text-sm"
               >
                 <span
                   aria-hidden
-                  className={`absolute inset-y-0 left-0 w-0.5 ${CARD_TYPE_META[card.type].edge}`}
+                  className={`edge ${CARD_TYPE_META[card.type].tone} absolute inset-y-0 left-0 w-0.5`}
                 />
                 {card.title}
               </li>
             ))}
           </ul>
           {cards.length > 4 && (
-            <p className="mt-2 text-xs text-muted">
-              +{cards.length - 4} more
-            </p>
+            <p className="mt-2 text-xs text-muted">+{cards.length - 4} more</p>
           )}
         </>
       )}
-    </div>
+    </Link>
   );
 }

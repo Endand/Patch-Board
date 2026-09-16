@@ -1,19 +1,72 @@
 @import "tailwindcss";
 
-/* Patch Board commits to a dark surface. The six card colours are tuned
-   against it, and a board is meant to read as a heatmap at a glance. */
+/* Light is the default. The dark palette is applied either by an explicit
+   [data-theme="dark"] from the toggle, or by system preference when the user
+   has not chosen. Both paths set the same variables. */
 :root {
+  --background: #ffffff;
+  --surface: #f7f8f9;
+  --surface-2: #ffffff;
+  --foreground: #16181c;
+  --border: #e3e6ea;
+  --muted: #666d78;
+
+  --praise: #047857;
+  --balance: #a16207;
+  --suggestion: #c2410c;
+  --bug: #be123c;
+  --polish: #0369a1;
+  --question: #52525b;
+
+  --chip-bg: 12%;
+  --chip-ring: 30%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0b0c0e;
+    --surface: #141619;
+    --surface-2: #0b0c0e;
+    --foreground: #e9eaec;
+    --border: #24272c;
+    --muted: #8b9199;
+
+    --praise: #34d399;
+    --balance: #fbbf24;
+    --suggestion: #fb923c;
+    --bug: #fb7185;
+    --polish: #38bdf8;
+    --question: #a1a1aa;
+
+    --chip-bg: 15%;
+    --chip-ring: 30%;
+  }
+}
+
+:root[data-theme="dark"] {
   --background: #0b0c0e;
-  --foreground: #e9eaec;
   --surface: #141619;
+  --surface-2: #0b0c0e;
+  --foreground: #e9eaec;
   --border: #24272c;
   --muted: #8b9199;
+
+  --praise: #34d399;
+  --balance: #fbbf24;
+  --suggestion: #fb923c;
+  --bug: #fb7185;
+  --polish: #38bdf8;
+  --question: #a1a1aa;
+
+  --chip-bg: 15%;
+  --chip-ring: 30%;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-edge: var(--border);
   --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
@@ -24,4 +77,31 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Card type colours. One variable per type drives the chip, the ring and the
+   card edge, so a theme swap only has to redefine six values. */
+.chip {
+  background: color-mix(in srgb, var(--type) var(--chip-bg), transparent);
+  color: var(--type);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--type) var(--chip-ring), transparent);
+}
+.edge {
+  background: var(--type);
+}
+.t-praise { --type: var(--praise); }
+.t-balance { --type: var(--balance); }
+.t-suggestion { --type: var(--suggestion); }
+.t-bug { --type: var(--bug); }
+.t-polish { --type: var(--polish); }
+.t-question { --type: var(--question); }
+
+/* "Hide empty sections" on a board. Pure CSS over the server rendered grid,
+   and a group whose sections are all empty collapses with them. */
+.pb-hide-empty .pb-section[data-empty="true"] {
+  display: none;
+}
+.pb-hide-empty .pb-group:not(:has(.pb-section[data-empty="false"])) {
+  display: none;
 }
