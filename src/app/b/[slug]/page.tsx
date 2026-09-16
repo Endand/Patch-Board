@@ -51,6 +51,14 @@ export default async function BoardPage({
   const unclaimed = !board.owner_user_id;
   const account = await currentAccount();
 
+  const { data: org } = board.org_id
+    ? await db
+        .from("organizations")
+        .select("slug, name")
+        .eq("id", board.org_id)
+        .maybeSingle<{ slug: string; name: string }>()
+    : { data: null };
+
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12">
       <header className="mb-8">
@@ -59,6 +67,14 @@ export default async function BoardPage({
         </Link>
         <div className="mt-3 flex flex-wrap items-baseline justify-between gap-4">
           <div>
+            {org && (
+              <Link
+                href={`/o/${org.slug}`}
+                className="mb-1 block text-xs font-medium uppercase tracking-widest text-muted transition hover:text-foreground"
+              >
+                {org.name}
+              </Link>
+            )}
             <h1 className="text-3xl font-semibold tracking-tight">
               {board.name}
             </h1>

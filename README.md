@@ -65,6 +65,18 @@ Boards created before accounts existed carry an owner secret instead. Entering
 it at `/b/<board>/claim` attaches the board to your account permanently. The
 secret remains as a recovery code.
 
+## Organizations
+
+Boards can be grouped. An organization has one shared password that opens
+every board inside it, and one admin list whose members administer every board
+inside it, so access does not have to be handed out board by board.
+
+Organizations only ever add access. A board in one is never harder to reach
+than it would be standing alone, and it keeps its own visibility, password and
+admins, so a single board can still be shared with someone who has no business
+seeing the rest. Deleting an organization keeps its boards and returns them to
+standing alone.
+
 ## Sections
 
 Boards are generated from a template, but nothing stays fixed. An admin can

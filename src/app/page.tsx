@@ -47,6 +47,37 @@ export default async function Home() {
   const withCounts = (list: Board[]): BoardWithCount[] =>
     list.map((b) => ({ ...b, cardCount: counts.get(b.id) ?? 0 }));
 
+  // Organizations you run, with how many boards each holds.
+  const orgs = account
+    ? (((
+        await db
+          .from("organizations")
+          .select("id, slug, name, description")
+          .eq("owner_user_id", account.id)
+          .order("created_at")
+      ).data ?? []) as {
+        id: string;
+        slug: string;
+        name: string;
+        description: string | null;
+      }[])
+    : [];
+
+  const orgBoardCounts = new Map<string, number>();
+  if (orgs.length) {
+    const { data: rows } = await db
+      .from("boards")
+      .select("org_id")
+      .in(
+        "org_id",
+        orgs.map((o) => o.id),
+      );
+    for (const row of rows ?? []) {
+      const id = row.org_id as string;
+      orgBoardCounts.set(id, (orgBoardCounts.get(id) ?? 0) + 1);
+    }
+  }
+
   return (
     <main>
       <section className="relative overflow-hidden border-b border-edge">
@@ -71,6 +102,14 @@ export default async function Home() {
             >
               Create a board
             </Link>
+            {account && (
+              <Link
+                href="/o/new"
+                className="rounded-lg border border-edge bg-surface px-4 py-2.5 text-sm font-medium transition hover:border-edge-strong"
+              >
+                New organization
+              </Link>
+            )}
             {boards.length > 0 && (
               <a
                 href="#boards"
@@ -84,6 +123,37 @@ export default async function Home() {
       </section>
 
       <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
+        {orgs.length > 0 && (
+          <section className="mb-14">
+            <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-muted">
+              Your organizations
+            </h2>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {orgs.map((org) => {
+                const count = orgBoardCounts.get(org.id) ?? 0;
+                return (
+                  <li key={org.id}>
+                    <Link
+                      href={`/o/${org.slug}`}
+                      className="panel lift flex h-full flex-col p-5"
+                    >
+                      <span className="font-medium">{org.name}</span>
+                      {org.description && (
+                        <span className="mt-0.5 text-sm text-muted">
+                          {org.description}
+                        </span>
+                      )}
+                      <span className="mt-4 text-xs text-muted">
+                        {count} {count === 1 ? "board" : "boards"}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
         {mine.length > 0 && (
           <BoardSection
             id="mine"
