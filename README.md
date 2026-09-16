@@ -30,8 +30,14 @@ which is a convenience for editing your own cards and never a permission.
 Accounts exist solely so somebody can run a board: reading and posting never
 need one.
 
-Signing in is GitHub only. Patch Board stores no password, so there is nothing
-to reset, no confirmation mail to send and no credential of ours to leak.
+Signing in is through GitHub or Discord. Patch Board stores no password, so
+there is nothing to reset, no confirmation mail to send and no credential of
+ours to leak.
+
+Both can be linked to the same account from `/account`, so one person stays
+one account whichever they use. Signing in with a service that has not been
+linked creates a separate account that owns none of your boards, so link
+before switching.
 
 Each board has one of three visibility levels:
 

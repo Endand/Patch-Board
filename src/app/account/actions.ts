@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { authClient } from "@/lib/auth";
+import { authClient, currentAccount, isProvider } from "@/lib/auth";
 
 /**
  * Where OAuth should return to. Vercel sets VERCEL_URL per deployment, so
@@ -15,21 +15,27 @@ function siteUrl(): string {
   return "http://localhost:3000";
 }
 
+/** Only ever return inside this site, never to a URL taken from a form. */
+function safeNext(value: FormDataEntryValue | null): string {
+  const raw = String(value ?? "/");
+  return raw.startsWith("/") ? raw : "/";
+}
+
 /**
- * Start GitHub sign in.
+ * Start sign in with GitHub or Discord.
  *
- * GitHub is the only way in. Nothing here stores a password, so there is
- * nothing to reset, no confirmation mail to deliver, and no credential of
- * ours to leak.
+ * Nothing here stores a password, so there is nothing to reset and no
+ * credential of ours to leak.
  */
-export async function signInWithGitHub(formData: FormData) {
-  const requested = String(formData.get("next") ?? "/");
-  // Only ever return inside this site, never to a URL from the form.
-  const next = requested.startsWith("/") ? requested : "/";
+export async function signInWithProvider(formData: FormData) {
+  const provider = String(formData.get("provider") ?? "");
+  if (!isProvider(provider)) redirect("/account/sign-in?error=provider");
+
+  const next = safeNext(formData.get("next"));
 
   const supabase = await authClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "github",
+    provider,
     options: {
       redirectTo: `${siteUrl()}/account/callback?next=${encodeURIComponent(next)}`,
     },
@@ -37,6 +43,54 @@ export async function signInWithGitHub(formData: FormData) {
 
   if (error || !data.url) redirect("/account/sign-in?error=start");
   redirect(data.url);
+}
+
+/**
+ * Attach a second provider to the account already signed in.
+ *
+ * This is how one person stays one account. Without it, signing in with
+ * Discord after GitHub creates a separate account that owns none of your
+ * boards, which is exactly the trap worth avoiding.
+ */
+export async function linkProvider(formData: FormData) {
+  const provider = String(formData.get("provider") ?? "");
+  if (!isProvider(provider)) redirect("/account?error=provider");
+
+  const account = await currentAccount();
+  if (!account) redirect("/account/sign-in?next=%2Faccount");
+  if (account.providers.includes(provider)) redirect("/account");
+
+  const supabase = await authClient();
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider,
+    options: {
+      redirectTo: `${siteUrl()}/account/callback?next=%2Faccount`,
+    },
+  });
+
+  // Manual linking is a project setting. Say so plainly rather than failing
+  // with a blank screen.
+  if (error || !data?.url) redirect("/account?error=linking");
+  redirect(data.url);
+}
+
+export async function unlinkProvider(formData: FormData) {
+  const provider = String(formData.get("provider") ?? "");
+  if (!isProvider(provider)) redirect("/account?error=provider");
+
+  const account = await currentAccount();
+  if (!account) redirect("/account/sign-in?next=%2Faccount");
+
+  // Removing the only way in would lock the account out of its own boards.
+  if (account.providers.length < 2) redirect("/account?error=last");
+
+  const supabase = await authClient();
+  const { data } = await supabase.auth.getUserIdentities();
+  const identity = data?.identities?.find((i) => i.provider === provider);
+  if (identity) await supabase.auth.unlinkIdentity(identity);
+
+  revalidatePath("/account", "layout");
+  redirect("/account");
 }
 
 export async function signOut() {

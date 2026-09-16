@@ -3,40 +3,61 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 /**
- * Sign in is GitHub only. There is no password to store, reset or leak, and
- * no email to deliver, which is the whole reason for choosing it.
+ * Sign in is through GitHub or Discord. Neither stores a password here, so
+ * there is nothing to reset or leak, and no mail to deliver.
  *
- * A GitHub account can keep its address private, so `email` may be null. The
- * handle is what people recognise each other by, so `label` prefers it.
+ * Either provider can withhold an address, so `email` may be null. The handle
+ * is what people recognise each other by, so `label` prefers it.
  */
+export const PROVIDERS = ["github", "discord"] as const;
+export type Provider = (typeof PROVIDERS)[number];
+
+export const PROVIDER_LABEL: Record<Provider, string> = {
+  github: "GitHub",
+  discord: "Discord",
+};
+
+export function isProvider(value: unknown): value is Provider {
+  return PROVIDERS.includes(value as Provider);
+}
+
 export type Account = {
   id: string;
   email: string | null;
   handle: string | null;
   label: string;
+  /** Every provider linked to this account, so one person is one account. */
+  providers: Provider[];
 };
 
 type RawUser = {
   id: string;
   email?: string | null;
   user_metadata?: Record<string, unknown> | null;
+  identities?: { provider?: string | null }[] | null;
 };
 
-function toAccount(user: RawUser): Account {
-  const meta = user.user_metadata ?? {};
-  const handle =
-    typeof meta.user_name === "string"
-      ? meta.user_name
-      : typeof meta.preferred_username === "string"
-        ? meta.preferred_username
-        : null;
+/** Providers spell the username differently, so try each in turn. */
+function handleFrom(meta: Record<string, unknown>): string | null {
+  for (const key of ["user_name", "preferred_username", "name", "full_name"]) {
+    const value = meta[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
 
+function toAccount(user: RawUser): Account {
+  const handle = handleFrom(user.user_metadata ?? {});
   const email = user.email ?? null;
+
   return {
     id: user.id,
     email,
     handle,
     label: handle ? `@${handle}` : (email ?? "Unknown account"),
+    providers: (user.identities ?? [])
+      .map((i) => i.provider)
+      .filter(isProvider),
   };
 }
 
