@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/supabase";
 import { grantFor, isOwner, loadBoard } from "@/lib/access";
-import { accountsById, currentAccount, listAccounts } from "@/lib/auth";
+import { accountsById, currentAccount } from "@/lib/auth";
 import type { Card, Section } from "@/lib/cards";
 import { BoardSettings } from "./BoardSettings";
 import { ModerationQueue } from "./ModerationQueue";
+import { SectionManager } from "./SectionManager";
 
 export const dynamic = "force-dynamic";
 
@@ -44,9 +45,16 @@ export default async function SettingsPage({
   const cards = (cardRows ?? []) as Card[];
   const sectionNames = new Map(sections.map((s) => [s.id, s.name]));
 
-  const [{ data: adminRows }, accounts, me] = await Promise.all([
+  const cardsPerSection = new Map<string, number>();
+  for (const card of cards) {
+    cardsPerSection.set(
+      card.section_id,
+      (cardsPerSection.get(card.section_id) ?? 0) + 1,
+    );
+  }
+
+  const [{ data: adminRows }, me] = await Promise.all([
     db.from("board_admins").select("user_id").eq("board_id", board.id),
-    listAccounts(),
     currentAccount(),
   ]);
 
@@ -71,10 +79,6 @@ export default async function SettingsPage({
       primary: false,
     })),
   ];
-
-  const candidates = accounts.filter(
-    (a) => a.id !== board.owner_user_id && !adminIds.includes(a.id),
-  );
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-12">
@@ -103,10 +107,22 @@ export default async function SettingsPage({
           mediaUrl: board.media_url_mode,
         }}
         admins={admins}
-        candidates={candidates}
         currentUserId={me?.id ?? null}
         cardCount={cards.length}
       />
+
+      <div className="mt-10">
+        <SectionManager
+          slug={slug}
+          sections={sections.map((section) => ({
+            id: section.id,
+            name: section.name,
+            group_name: section.group_name,
+            is_hidden: section.is_hidden,
+            cardCount: cardsPerSection.get(section.id) ?? 0,
+          }))}
+        />
+      </div>
 
       <section className="mt-12">
         <h2 className="mb-1 text-lg font-medium">Feedback</h2>

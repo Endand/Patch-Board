@@ -44,9 +44,13 @@ through a server action that checks the grant first. A successful unlock stores
 a signed cookie scoped to that one board.
 
 A board belongs to the account that created it. That account can add other
-accounts as admins, and every admin has the same powers: moderate cards and
-change any setting, including adding further admins. Only the owner cannot be
-removed, so a board always has someone in charge.
+admins by their exact email address, and every admin has the same powers:
+moderate cards and change any setting, including adding further admins. Only
+the owner cannot be removed, so a board always has someone in charge, and only
+the owner can delete the board.
+
+Admins are invited by typing an address rather than picking from a list, so
+nothing on the page reveals who else has an account.
 
 `/b/<board>/settings` covers renaming, visibility, setting or clearing the
 access password at any time, which parts of a card the board requires, the
@@ -57,6 +61,13 @@ it and cannot be undone.
 Boards created before accounts existed carry an owner secret instead. Entering
 it at `/b/<board>/claim` attaches the board to your account permanently. The
 secret remains as a recovery code.
+
+## Sections
+
+Boards are generated from a template, but nothing stays fixed. An admin can
+add sections, rename them, group them, reorder them, hide one without losing
+its feedback, or delete it outright. That is what makes characters with
+unusual kits workable.
 
 ## Filtering
 

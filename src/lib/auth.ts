@@ -47,39 +47,55 @@ export async function currentAccount(): Promise<Account | null> {
   return { id: user.id, email: user.email };
 }
 
-/**
- * Every registered account, for the admin picker on board settings.
- *
- * Uses the service role, so it deliberately sidesteps the session. Note that
- * this exposes every user's email address to anyone who administers a board.
- * If Patch Board ever has users who are not known to each other, this should
- * become an invite by exact address instead of a list.
- */
-export async function listAccounts(): Promise<Account[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+async function adminApi(query: string): Promise<{ id: string; email?: string }[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return [];
 
-  const res = await fetch(`${url}/auth/v1/admin/users?per_page=200`, {
+  const res = await fetch(`${url}/auth/v1/admin/users?${query}`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
     cache: "no-store",
   });
   if (!res.ok) return [];
 
   const body = (await res.json()) as { users?: { id: string; email?: string }[] };
-  return (body.users ?? [])
-    .filter((u): u is { id: string; email: string } => Boolean(u.email))
-    .map((u) => ({ id: u.id, email: u.email }))
-    .sort((a, b) => a.email.localeCompare(b.email));
+  return body.users ?? [];
 }
 
-/** Look up the addresses behind a set of ids, for display. */
+/**
+ * Find one account by its exact address.
+ *
+ * Deliberately a lookup rather than a list. Returning every registered
+ * address to anyone who administers a board would let any board owner
+ * enumerate every user, so admins are invited by typing an address they
+ * already know.
+ */
+export async function accountByEmail(email: string): Promise<Account | null> {
+  const wanted = email.trim().toLowerCase();
+  if (!wanted) return null;
+
+  const users = await adminApi(
+    `filter=${encodeURIComponent(wanted)}&per_page=20`,
+  );
+  const match = users.find((u) => u.email?.toLowerCase() === wanted);
+  return match?.email ? { id: match.id, email: match.email } : null;
+}
+
+/**
+ * The addresses behind a set of ids, so the admin list can show who is on it.
+ * Only ever called with ids that are already admins of the board being
+ * viewed, so it reveals nothing the viewer should not see.
+ */
 export async function accountsById(
   ids: string[],
 ): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
-  const all = await listAccounts();
+
   const wanted = new Set(ids);
+  const users = await adminApi("per_page=200");
   return new Map(
-    all.filter((a) => wanted.has(a.id)).map((a) => [a.id, a.email]),
+    users
+      .filter((u) => wanted.has(u.id) && u.email)
+      .map((u) => [u.id, u.email!]),
   );
 }

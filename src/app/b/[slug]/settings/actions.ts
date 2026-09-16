@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/supabase";
 import { hashSecret } from "@/lib/hash";
 import { grantFor, isOwner, loadBoard, lockBoard } from "@/lib/access";
-import { currentAccount } from "@/lib/auth";
+import { accountByEmail, currentAccount } from "@/lib/auth";
 
 export type SettingsResult =
   | { ok: true; message: string; ownerSecret?: string }
@@ -177,8 +177,20 @@ export async function addAdmin(
   const me = await currentAccount();
   if (!me) return { ok: false, error: "Sign in first" };
 
-  const userId = String(formData.get("user_id") ?? "");
-  if (!userId) return { ok: false, error: "Pick an account" };
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { ok: false, error: "Enter an email address" };
+
+  const invitee = await accountByEmail(email);
+  // Says the same thing whether the address is unknown or simply has no
+  // account, so this cannot be used to probe who has signed up.
+  if (!invitee) {
+    return {
+      ok: false,
+      error: "No account with that address. They need to sign up first.",
+    };
+  }
+
+  const userId = invitee.id;
   if (userId === auth.board.owner_user_id) {
     return { ok: false, error: "That account already owns this board" };
   }
@@ -192,7 +204,7 @@ export async function addAdmin(
   if (error) return { ok: false, error: "Could not add that admin" };
 
   revalidatePath(`/b/${slug}`, "layout");
-  return { ok: true, message: "Admin added." };
+  return { ok: true, message: `${invitee.email} can now administer this board.` };
 }
 
 export async function removeAdmin(

@@ -84,6 +84,10 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             <Link href="/account/sign-up" className="underline">
               Create one
             </Link>
+            {" · "}
+            <Link href="/account/forgot" className="underline">
+              Forgot password
+            </Link>
           </>
         )}
       </p>

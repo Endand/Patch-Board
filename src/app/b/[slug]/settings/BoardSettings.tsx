@@ -17,7 +17,6 @@ import {
 type FieldMode = "required" | "optional" | "hidden";
 
 type Admin = { id: string; email: string; primary: boolean };
-type Account = { id: string; email: string };
 
 const FIELDS: {
   key: "author_name_mode" | "body_mode" | "media_url_mode";
@@ -61,7 +60,6 @@ export function BoardSettings({
   hasPassword,
   fields,
   admins,
-  candidates,
   currentUserId,
   cardCount,
 }: {
@@ -72,7 +70,6 @@ export function BoardSettings({
   hasPassword: boolean;
   fields: { authorName: FieldMode; body: FieldMode; mediaUrl: FieldMode };
   admins: Admin[];
-  candidates: Account[];
   currentUserId: string | null;
   cardCount: number;
 }) {
@@ -289,31 +286,21 @@ export function BoardSettings({
           ))}
         </ul>
 
-        {candidates.length === 0 ? (
-          <p className="text-sm text-muted">
-            No other accounts to add. People need to sign up before they can be
-            made an admin.
-          </p>
-        ) : (
-          <form action={adminAction} className="flex flex-wrap gap-2">
-            <select
-              name="user_id"
-              defaultValue=""
-              required
-              className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm"
-            >
-              <option value="" disabled>
-                Choose an account
-              </option>
-              {candidates.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.email}
-                </option>
-              ))}
-            </select>
-            <Submit pending={adminPending}>Add admin</Submit>
-          </form>
-        )}
+        <form action={adminAction} className="flex flex-wrap gap-2">
+          <input
+            name="email"
+            type="email"
+            required
+            autoComplete="off"
+            placeholder="Their email address"
+            className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          />
+          <Submit pending={adminPending}>Add admin</Submit>
+        </form>
+        <p className="mt-2 text-xs text-muted">
+          They need a Patch Board account already. Addresses are matched
+          exactly, and nothing here reveals who else has signed up.
+        </p>
         <Result state={adminState} />
       </Panel>
 
