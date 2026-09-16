@@ -24,7 +24,7 @@ export default async function NewBoardPage() {
     <main className="mx-auto w-full max-w-xl px-6 py-14">
       <h1 className="text-2xl font-semibold tracking-tight">New board</h1>
       <p className="mt-2 text-sm text-muted">
-        The board will belong to {account.email}. Anyone can read and post on
+        The board will belong to {account.label}. Anyone can read and post on
         it without an account.
       </p>
       <div className="mt-6">

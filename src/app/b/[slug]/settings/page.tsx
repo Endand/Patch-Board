@@ -59,25 +59,16 @@ export default async function SettingsPage({
   ]);
 
   const adminIds = (adminRows ?? []).map((r) => r.user_id as string);
-  const emails = await accountsById(
+  const people = await accountsById(
     board.owner_user_id ? [board.owner_user_id, ...adminIds] : adminIds,
   );
+  const label = (id: string) => people.get(id)?.label ?? "Unknown account";
 
   const admins = [
     ...(board.owner_user_id
-      ? [
-          {
-            id: board.owner_user_id,
-            email: emails.get(board.owner_user_id) ?? "Unknown account",
-            primary: true,
-          },
-        ]
+      ? [{ id: board.owner_user_id, label: label(board.owner_user_id), primary: true }]
       : []),
-    ...adminIds.map((id) => ({
-      id,
-      email: emails.get(id) ?? "Unknown account",
-      primary: false,
-    })),
+    ...adminIds.map((id) => ({ id, label: label(id), primary: false })),
   ];
 
   return (

@@ -2,14 +2,50 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
-export type Account = { id: string; email: string };
+/**
+ * Sign in is GitHub only. There is no password to store, reset or leak, and
+ * no email to deliver, which is the whole reason for choosing it.
+ *
+ * A GitHub account can keep its address private, so `email` may be null. The
+ * handle is what people recognise each other by, so `label` prefers it.
+ */
+export type Account = {
+  id: string;
+  email: string | null;
+  handle: string | null;
+  label: string;
+};
+
+type RawUser = {
+  id: string;
+  email?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
+
+function toAccount(user: RawUser): Account {
+  const meta = user.user_metadata ?? {};
+  const handle =
+    typeof meta.user_name === "string"
+      ? meta.user_name
+      : typeof meta.preferred_username === "string"
+        ? meta.preferred_username
+        : null;
+
+  const email = user.email ?? null;
+  return {
+    id: user.id,
+    email,
+    handle,
+    label: handle ? `@${handle}` : (email ?? "Unknown account"),
+  };
+}
 
 /**
  * Auth client, using the anon key and the visitor's own session cookies.
  *
- * This is separate from the service role client in supabase.ts on purpose:
- * this one acts as whoever is signed in and is only ever used for auth, while
- * that one bypasses RLS and does all the reading and writing.
+ * Separate from the service role client in supabase.ts on purpose: this one
+ * acts as whoever is signed in and is only used for auth, while that one
+ * bypasses RLS and does all the reading and writing.
  */
 export async function authClient() {
   const jar = await cookies();
@@ -27,8 +63,8 @@ export async function authClient() {
             }
           } catch {
             // Cookies cannot be written while rendering a Server Component.
-            // Sessions are refreshed in server actions and middleware, so a
-            // failure here is expected and harmless.
+            // Sessions are refreshed in route handlers and server actions, so
+            // a failure here is expected and harmless.
           }
         },
       },
@@ -43,11 +79,10 @@ export async function currentAccount(): Promise<Account | null> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user?.email) return null;
-  return { id: user.id, email: user.email };
+  return user ? toAccount(user as RawUser) : null;
 }
 
-async function adminApi(query: string): Promise<{ id: string; email?: string }[]> {
+async function adminApi(query: string): Promise<RawUser[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return [];
@@ -58,44 +93,46 @@ async function adminApi(query: string): Promise<{ id: string; email?: string }[]
   });
   if (!res.ok) return [];
 
-  const body = (await res.json()) as { users?: { id: string; email?: string }[] };
+  const body = (await res.json()) as { users?: RawUser[] };
   return body.users ?? [];
 }
 
 /**
- * Find one account by its exact address.
+ * Find one account by GitHub handle or email address.
  *
- * Deliberately a lookup rather than a list. Returning every registered
- * address to anyone who administers a board would let any board owner
- * enumerate every user, so admins are invited by typing an address they
- * already know.
+ * Deliberately a lookup rather than a list. Handing back every registered
+ * account would let anyone who runs a board enumerate every user, so admins
+ * are invited by typing something the inviter already knows.
  */
-export async function accountByEmail(email: string): Promise<Account | null> {
-  const wanted = email.trim().toLowerCase();
+export async function findAccount(query: string): Promise<Account | null> {
+  const wanted = query.trim().replace(/^@/, "").toLowerCase();
   if (!wanted) return null;
 
-  const users = await adminApi(
-    `filter=${encodeURIComponent(wanted)}&per_page=20`,
+  const users = await adminApi("per_page=200");
+  return (
+    users
+      .map(toAccount)
+      .find(
+        (a) =>
+          a.handle?.toLowerCase() === wanted || a.email?.toLowerCase() === wanted,
+      ) ?? null
   );
-  const match = users.find((u) => u.email?.toLowerCase() === wanted);
-  return match?.email ? { id: match.id, email: match.email } : null;
 }
 
 /**
- * The addresses behind a set of ids, so the admin list can show who is on it.
- * Only ever called with ids that are already admins of the board being
- * viewed, so it reveals nothing the viewer should not see.
+ * The accounts behind a set of ids, so the admin list can show who is on it.
+ * Only ever called with ids that already administer the board being viewed.
  */
 export async function accountsById(
   ids: string[],
-): Promise<Map<string, string>> {
+): Promise<Map<string, Account>> {
   if (ids.length === 0) return new Map();
 
   const wanted = new Set(ids);
   const users = await adminApi("per_page=200");
   return new Map(
     users
-      .filter((u) => wanted.has(u.id) && u.email)
-      .map((u) => [u.id, u.email!]),
+      .filter((u) => wanted.has(u.id))
+      .map((u) => [u.id, toAccount(u)] as const),
   );
 }

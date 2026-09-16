@@ -16,7 +16,7 @@ import {
 
 type FieldMode = "required" | "optional" | "hidden";
 
-type Admin = { id: string; email: string; primary: boolean };
+type Admin = { id: string; label: string; primary: boolean };
 
 const FIELDS: {
   key: "author_name_mode" | "body_mode" | "media_url_mode";
@@ -270,7 +270,7 @@ export function BoardSettings({
               key={admin.id}
               className="flex flex-wrap items-center gap-2 rounded border border-edge bg-background px-3 py-2 text-sm"
             >
-              <span>{admin.email}</span>
+              <span>{admin.label}</span>
               {admin.primary && (
                 <span className="rounded-full border border-edge px-1.5 py-0.5 text-[11px] text-muted">
                   Owner
@@ -288,18 +288,17 @@ export function BoardSettings({
 
         <form action={adminAction} className="flex flex-wrap gap-2">
           <input
-            name="email"
-            type="email"
+            name="who"
             required
             autoComplete="off"
-            placeholder="Their email address"
+            placeholder="Their GitHub username"
             className="min-w-0 flex-1 rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
           />
           <Submit pending={adminPending}>Add admin</Submit>
         </form>
         <p className="mt-2 text-xs text-muted">
-          They need a Patch Board account already. Addresses are matched
-          exactly, and nothing here reveals who else has signed up.
+          They need to have signed in to Patch Board at least once. Matched
+          exactly, and nothing here reveals who else has an account.
         </p>
         <Result state={adminState} />
       </Panel>

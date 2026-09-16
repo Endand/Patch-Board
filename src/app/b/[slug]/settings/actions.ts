@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/supabase";
 import { hashSecret } from "@/lib/hash";
 import { grantFor, isOwner, loadBoard, lockBoard } from "@/lib/access";
-import { accountByEmail, currentAccount } from "@/lib/auth";
+import { currentAccount, findAccount } from "@/lib/auth";
 
 export type SettingsResult =
   | { ok: true; message: string; ownerSecret?: string }
@@ -177,16 +177,16 @@ export async function addAdmin(
   const me = await currentAccount();
   if (!me) return { ok: false, error: "Sign in first" };
 
-  const email = String(formData.get("email") ?? "").trim();
-  if (!email) return { ok: false, error: "Enter an email address" };
+  const query = String(formData.get("who") ?? "").trim();
+  if (!query) return { ok: false, error: "Enter a GitHub username" };
 
-  const invitee = await accountByEmail(email);
-  // Says the same thing whether the address is unknown or simply has no
-  // account, so this cannot be used to probe who has signed up.
+  const invitee = await findAccount(query);
+  // Says the same thing whether the handle is unknown or simply has not
+  // signed in here, so this cannot be used to probe who has an account.
   if (!invitee) {
     return {
       ok: false,
-      error: "No account with that address. They need to sign up first.",
+      error: "Nobody by that name has signed in to Patch Board yet.",
     };
   }
 
@@ -204,7 +204,10 @@ export async function addAdmin(
   if (error) return { ok: false, error: "Could not add that admin" };
 
   revalidatePath(`/b/${slug}`, "layout");
-  return { ok: true, message: `${invitee.email} can now administer this board.` };
+  return {
+    ok: true,
+    message: `${invitee.label} can now administer this board.`,
+  };
 }
 
 export async function removeAdmin(

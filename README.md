@@ -30,6 +30,9 @@ which is a convenience for editing your own cards and never a permission.
 Accounts exist solely so somebody can run a board: reading and posting never
 need one.
 
+Signing in is GitHub only. Patch Board stores no password, so there is nothing
+to reset, no confirmation mail to send and no credential of ours to leak.
+
 Each board has one of three visibility levels:
 
 | Level            | Read           | Post           |
@@ -44,12 +47,12 @@ through a server action that checks the grant first. A successful unlock stores
 a signed cookie scoped to that one board.
 
 A board belongs to the account that created it. That account can add other
-admins by their exact email address, and every admin has the same powers:
+admins by their GitHub username, and every admin has the same powers:
 moderate cards and change any setting, including adding further admins. Only
 the owner cannot be removed, so a board always has someone in charge, and only
 the owner can delete the board.
 
-Admins are invited by typing an address rather than picking from a list, so
+Admins are invited by typing a username rather than picking from a list, so
 nothing on the page reveals who else has an account.
 
 `/b/<board>/settings` covers renaming, visibility, setting or clearing the

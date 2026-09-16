@@ -18,8 +18,11 @@ export async function AccountMenu() {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="hidden text-sm text-muted sm:inline" title={account.email}>
-        {account.email}
+      <span
+        className="hidden text-sm text-muted sm:inline"
+        title={account.email ?? undefined}
+      >
+        {account.label}
       </span>
       <form action={signOut}>
         <button

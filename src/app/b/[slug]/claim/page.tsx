@@ -35,7 +35,7 @@ export default async function ClaimPage({
       </h1>
       <p className="mb-5 text-sm text-muted">
         This board was made before accounts existed. Enter its owner secret to
-        attach it to {account.email}.
+        attach it to {account.label}.
       </p>
       <ClaimForm slug={slug} />
     </main>
