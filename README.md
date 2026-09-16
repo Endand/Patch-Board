@@ -42,8 +42,11 @@ with no policies, so the anon key can read nothing at all and every query runs
 through a server action that checks the grant first. A successful unlock stores
 a signed cookie scoped to that one board.
 
-Each board also has a separate owner secret, shown once at creation, which
-unlocks moderation: changing card status and deleting anyone's card.
+Each board also has a separate owner secret, shown once at creation. Entering
+it at `/b/<board>/owner` signs you in as that board's admin, which unlocks
+`/b/<board>/settings`: rename the board, change its visibility, set or remove
+the access password at any time, issue a replacement owner secret, and work
+through every card in one moderation queue to set a status or delete it.
 
 Creating a board requires the site wide `ADMIN_SECRET`. Everything else is
 open.

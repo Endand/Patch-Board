@@ -96,12 +96,3 @@ body {
 .t-bug { --type: var(--bug); }
 .t-polish { --type: var(--polish); }
 .t-question { --type: var(--question); }
-
-/* "Hide empty sections" on a board. Pure CSS over the server rendered grid,
-   and a group whose sections are all empty collapses with them. */
-.pb-hide-empty .pb-section[data-empty="true"] {
-  display: none;
-}
-.pb-hide-empty .pb-group:not(:has(.pb-section[data-empty="false"])) {
-  display: none;
-}
