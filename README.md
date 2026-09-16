@@ -51,6 +51,8 @@ removed, so a board always has someone in charge.
 `/b/<board>/settings` covers renaming, visibility, setting or clearing the
 access password at any time, which parts of a card the board requires, the
 admin list, a replacement owner secret, and a moderation queue over every card.
+The owner alone can delete the board, which takes its sections and cards with
+it and cannot be undone.
 
 Boards created before accounts existed carry an owner secret instead. Entering
 it at `/b/<board>/claim` attaches the board to your account permanently. The

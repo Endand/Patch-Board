@@ -105,6 +105,7 @@ export default async function SettingsPage({
         admins={admins}
         candidates={candidates}
         currentUserId={me?.id ?? null}
+        cardCount={cards.length}
       />
 
       <section className="mt-12">

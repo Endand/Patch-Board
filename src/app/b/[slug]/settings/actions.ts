@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/supabase";
 import { hashSecret } from "@/lib/hash";
 import { grantFor, isOwner, loadBoard, lockBoard } from "@/lib/access";
@@ -212,4 +213,41 @@ export async function removeAdmin(
 
   revalidatePath(`/b/${slug}`, "layout");
   return { ok: true, message: "Admin removed." };
+}
+
+/**
+ * Delete a board and everything on it.
+ *
+ * Restricted to the primary owner rather than any admin: an admin can be
+ * added by another admin, and this is the one action with nothing to undo it.
+ * The name has to be typed back, so it cannot happen on a stray click.
+ *
+ * Sections, cards, votes and the admin list all cascade from the board row.
+ */
+export async function deleteBoard(
+  slug: string,
+  _prev: SettingsResult | null,
+  formData: FormData,
+): Promise<SettingsResult> {
+  const auth = await requireOwner(slug);
+  if (!auth.ok) return auth;
+
+  const me = await currentAccount();
+  if (!me || auth.board.owner_user_id !== me.id) {
+    return {
+      ok: false,
+      error: "Only the board owner can delete it",
+    };
+  }
+
+  const typed = String(formData.get("confirm") ?? "").trim();
+  if (typed !== auth.board.name) {
+    return { ok: false, error: `Type "${auth.board.name}" to confirm` };
+  }
+
+  const { error } = await db.from("boards").delete().eq("id", auth.board.id);
+  if (error) return { ok: false, error: "Could not delete that board" };
+
+  revalidatePath("/", "layout");
+  redirect("/");
 }

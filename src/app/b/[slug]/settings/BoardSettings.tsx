@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useActionState, useState, useTransition } from "react";
 import {
   addAdmin,
+  deleteBoard,
   removeAdmin,
   rotateOwnerSecret,
   signOut,
@@ -62,6 +63,7 @@ export function BoardSettings({
   admins,
   candidates,
   currentUserId,
+  cardCount,
 }: {
   slug: string;
   name: string;
@@ -72,6 +74,7 @@ export function BoardSettings({
   admins: Admin[];
   candidates: Account[];
   currentUserId: string | null;
+  cardCount: number;
 }) {
   const router = useRouter();
 
@@ -84,6 +87,17 @@ export function BoardSettings({
     SettingsResult | null,
     FormData
   >((prev, formData) => addAdmin(slug, prev, formData), null);
+
+  // Deleting is the primary owner's alone. An admin can be added by another
+  // admin, so it is not a power to hand out by accident.
+  const isPrimaryOwner = admins.some(
+    (a) => a.primary && a.id === currentUserId,
+  );
+  const [armed, setArmed] = useState(false);
+  const [deleteState, deleteAction, deletePending] = useActionState<
+    SettingsResult | null,
+    FormData
+  >((prev, formData) => deleteBoard(slug, prev, formData), null);
 
   const [detailState, detailAction, detailPending] = useActionState<
     SettingsResult | null,
@@ -318,6 +332,53 @@ export function BoardSettings({
         )}
         <Result state={secretState} />
       </Panel>
+
+      {isPrimaryOwner && (
+        <section className="rounded-lg border border-rose-500/40 bg-surface p-5">
+          <h2 className="mb-1 text-lg font-medium">Delete this board</h2>
+          <p className="mb-4 text-sm text-muted">
+            Removes {name}, its {cardCount}{" "}
+            {cardCount === 1 ? "card" : "cards"} and every section. There is no
+            undo and the link stops working for everyone.
+          </p>
+          {armed ? (
+            <form action={deleteAction} className="space-y-3">
+              <Field label={`Type "${name}" to confirm`}>
+                <input
+                  name="confirm"
+                  autoComplete="off"
+                  className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-rose-500"
+                />
+              </Field>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="submit"
+                  disabled={deletePending}
+                  className="rounded bg-rose-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  {deletePending ? "Deleting..." : "Delete permanently"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setArmed(false)}
+                  className="rounded px-3 py-1.5 text-sm text-muted hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </div>
+              <Result state={deleteState} />
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setArmed(true)}
+              className="rounded border border-rose-500/40 px-3 py-1.5 text-sm text-rose-500"
+            >
+              Delete board
+            </button>
+          )}
+        </section>
+      )}
 
       <Panel title="Session">
         <button
