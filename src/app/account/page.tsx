@@ -16,6 +16,8 @@ export const metadata = { title: "Your account" };
 
 const MESSAGE: Record<string, string> = {
   linking: "Could not start linking.",
+  refused:
+    "Nothing was linked. This usually means that service already belongs to another Patch Board account. Sign in to that account and remove it there first, or delete it if it holds nothing you need.",
   last: "That is the only way into this account, so it cannot be removed.",
   provider: "Unknown sign in method.",
 };

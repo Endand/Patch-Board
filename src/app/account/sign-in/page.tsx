@@ -11,6 +11,7 @@ const MESSAGE: Record<string, string> = {
   start: "Could not reach that service. Try again.",
   link: "That sign in link had expired. Try again.",
   provider: "Unknown sign in method.",
+  refused: "That service could not be used. It may already belong to another account.",
   separate:
     "That service belongs to a different account, so nothing was linked and you have been signed out. Sign in the way you normally do, then link from your account page.",
 };
