@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/supabase";
-import { grantForOrg, isOwner, loadOrg } from "@/lib/access";
+import { canWrite, grantForOrg, isOwner, loadOrg } from "@/lib/access";
 import type { Board } from "@/lib/cards";
 import { OrgPasswordGate } from "./OrgPasswordGate";
 
@@ -28,13 +28,22 @@ export default async function OrgPage({
 
   const grant = await grantForOrg(org);
   const admin = isOwner(grant);
+  // Entering the organization password is what earns a look at everything
+  // inside it. Without it, a visitor sees only the boards they could have
+  // found anyway, so a private board's name does not leak from this page.
+  const seesEverything = admin || canWrite(grant);
 
   const { data } = await db
     .from("boards")
     .select("id, slug, name, subtitle, visibility")
     .eq("org_id", org.id)
     .order("created_at");
-  const boards = (data ?? []) as Board[];
+
+  const all = (data ?? []) as Board[];
+  const boards = seesEverything
+    ? all
+    : all.filter((b) => b.visibility !== "private");
+  const hidden = all.length - boards.length;
 
   const ids = boards.map((b) => b.id);
   const counts = new Map<string, number>();
@@ -93,11 +102,15 @@ export default async function OrgPage({
 
       {boards.length === 0 ? (
         <div className="panel px-6 py-12 text-center">
-          <p className="font-medium">No boards in here yet</p>
+          <p className="font-medium">
+            {hidden > 0 ? "Nothing public in here" : "No boards in here yet"}
+          </p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted">
-            {admin
-              ? "Add boards you own from the manage screen."
-              : "Nothing has been added to this organization."}
+            {hidden > 0
+              ? "This organization's boards are private. Enter the password above to see them."
+              : admin
+                ? "Add boards you own from the manage screen."
+                : "Nothing has been added to this organization."}
           </p>
         </div>
       ) : (

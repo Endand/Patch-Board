@@ -71,6 +71,10 @@ Boards can be grouped. An organization has one shared password that opens
 every board inside it, and one admin list whose members administer every board
 inside it, so access does not have to be handed out board by board.
 
+An organization's page lists only the boards the viewer could already reach.
+Private boards appear once the password has been entered, or to an admin, so
+grouping a board never exposes its name.
+
 Organizations only ever add access. A board in one is never harder to reach
 than it would be standing alone, and it keeps its own visibility, password and
 admins, so a single board can still be shared with someone who has no business
