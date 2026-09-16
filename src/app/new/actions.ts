@@ -1,22 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/supabase";
 import { hashSecret } from "@/lib/hash";
+import { currentAccount } from "@/lib/auth";
 
 export type CreateResult =
   | { ok: true; slug: string; ownerSecret: string }
   | { ok: false; error: string };
-
-function adminSecretMatches(supplied: string): boolean {
-  const expected = process.env.ADMIN_SECRET;
-  if (!expected) return false;
-
-  const a = Buffer.from(supplied);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 const slugify = (value: string) =>
   value
@@ -30,10 +21,8 @@ export async function createBoard(
   _prev: CreateResult | null,
   formData: FormData,
 ): Promise<CreateResult> {
-  const admin = String(formData.get("admin_secret") ?? "");
-  if (!adminSecretMatches(admin)) {
-    return { ok: false, error: "Wrong admin secret" };
-  }
+  const account = await currentAccount();
+  if (!account) return { ok: false, error: "Sign in to create a board" };
 
   const name = String(formData.get("name") ?? "").trim();
   const subtitle = String(formData.get("subtitle") ?? "").trim();
@@ -73,7 +62,8 @@ export async function createBoard(
     .eq("template_id", template.id)
     .order("position");
 
-  // Shown once on the confirmation screen and never stored in plain text.
+  // The board belongs to the account, so this is a recovery code rather than
+  // the way in. Shown once and never stored in plain text.
   const ownerSecret = crypto.randomUUID().slice(0, 8);
 
   const { data: board, error } = await db
@@ -86,6 +76,7 @@ export async function createBoard(
       visibility,
       access_hash: password ? await hashSecret(password) : null,
       owner_hash: await hashSecret(ownerSecret),
+      owner_user_id: account.id,
     })
     .select("id")
     .single<{ id: string }>();

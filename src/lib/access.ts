@@ -2,12 +2,19 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { db } from "@/lib/supabase";
+import { currentAccount } from "@/lib/auth";
 import { verifySecret } from "@/lib/hash";
 import type { Board } from "@/lib/cards";
+
+export type FieldMode = "required" | "optional" | "hidden";
 
 export type BoardRow = Board & {
   access_hash: string | null;
   owner_hash: string;
+  owner_user_id: string | null;
+  author_name_mode: FieldMode;
+  body_mode: FieldMode;
+  media_url_mode: FieldMode;
 };
 
 export type Grant = "none" | "read" | "write" | "owner";
@@ -52,7 +59,9 @@ const cookieName = (boardId: string) => `pb_b_${boardId.slice(0, 8)}`;
 export async function loadBoard(slug: string): Promise<BoardRow | null> {
   const { data } = await db
     .from("boards")
-    .select("id, slug, name, subtitle, visibility, access_hash, owner_hash")
+    .select(
+      "id, slug, name, subtitle, visibility, access_hash, owner_hash, owner_user_id, author_name_mode, body_mode, media_url_mode",
+    )
     .eq("slug", slug)
     .maybeSingle<BoardRow>();
   return data ?? null;
@@ -61,16 +70,28 @@ export async function loadBoard(slug: string): Promise<BoardRow | null> {
 /**
  * What the current visitor may do on this board.
  *
- * Public boards grant write to everyone. Protected boards are readable by
- * anyone but need the password to post. Private boards need it to see
- * anything. An owner cookie always outranks the rest.
+ * Ownership comes from the signed in account. Everything else is anonymous:
+ * public boards grant write to everyone, protected boards are readable by
+ * anyone but need the password to post, and private boards need it to see
+ * anything. The password cookie can raise that, and on a board nobody has
+ * claimed yet the owner secret still grants ownership so it can be claimed.
  */
 export async function grantFor(board: BoardRow): Promise<Grant> {
+  if (board.owner_user_id) {
+    const account = await currentAccount();
+    if (account && (await administers(board, account.id))) return "owner";
+  }
+
   const jar = await cookies();
   const fromCookie = readCookieGrant(
     board.id,
     jar.get(cookieName(board.id))?.value,
   );
+
+  // An owner cookie on a board that now belongs to an account is stale: the
+  // account is the only thing that confers ownership from here on.
+  const effective: Grant =
+    fromCookie === "owner" && board.owner_user_id ? "write" : fromCookie;
 
   const base: Grant =
     board.visibility === "public"
@@ -79,7 +100,29 @@ export async function grantFor(board: BoardRow): Promise<Grant> {
         ? "read"
         : "none";
 
-  return RANK[fromCookie] > RANK[base] ? fromCookie : base;
+  return RANK[effective] > RANK[base] ? effective : base;
+}
+
+/**
+ * The primary owner, or anyone they have added as an admin.
+ *
+ * The primary owner is the account that created or claimed the board. They
+ * can never be removed from the admin list, so a board cannot end up with
+ * nobody in charge.
+ */
+export async function administers(
+  board: BoardRow,
+  userId: string,
+): Promise<boolean> {
+  if (board.owner_user_id === userId) return true;
+
+  const { data } = await db
+    .from("board_admins")
+    .select("user_id")
+    .eq("board_id", board.id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return Boolean(data);
 }
 
 export const canRead = (g: Grant) => RANK[g] >= RANK.read;

@@ -25,9 +25,10 @@ movesets, one board per fighter. The product itself is not Smash specific.
 
 ## Access
 
-There are no user accounts. Posting is anonymous, identified only by a random
-key kept in the browser, which is a convenience for editing your own cards and
-never a permission.
+Posting is anonymous, identified only by a random key kept in the browser,
+which is a convenience for editing your own cards and never a permission.
+Accounts exist solely so somebody can run a board: reading and posting never
+need one.
 
 Each board has one of three visibility levels:
 
@@ -42,11 +43,25 @@ with no policies, so the anon key can read nothing at all and every query runs
 through a server action that checks the grant first. A successful unlock stores
 a signed cookie scoped to that one board.
 
-Each board also has a separate owner secret, shown once at creation. Entering
-it at `/b/<board>/owner` signs you in as that board's admin, which unlocks
-`/b/<board>/settings`: rename the board, change its visibility, set or remove
-the access password at any time, issue a replacement owner secret, and work
-through every card in one moderation queue to set a status or delete it.
+A board belongs to the account that created it. That account can add other
+accounts as admins, and every admin has the same powers: moderate cards and
+change any setting, including adding further admins. Only the owner cannot be
+removed, so a board always has someone in charge.
+
+`/b/<board>/settings` covers renaming, visibility, setting or clearing the
+access password at any time, which parts of a card the board requires, the
+admin list, a replacement owner secret, and a moderation queue over every card.
+
+Boards created before accounts existed carry an owner secret instead. Entering
+it at `/b/<board>/claim` attaches the board to your account permanently. The
+secret remains as a recovery code.
+
+## Filtering
+
+Both the board overview and each move page let you click the feedback type
+chips to narrow what is shown, and recount as you go. Move pages add
+checkboxes to hide anything already Acknowledged, Fixed or marked Won't fix.
+Boards can also hide sections that have nothing in them.
 
 Creating a board requires the site wide `ADMIN_SECRET`. Everything else is
 open.

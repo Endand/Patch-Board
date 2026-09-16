@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/supabase";
 import { canRead, canWrite, grantFor, isOwner, loadBoard } from "@/lib/access";
+import { currentAccount } from "@/lib/auth";
 import type { Card, Section } from "@/lib/cards";
 import { PasswordGate } from "@/components/PasswordGate";
 import { BoardGrid } from "@/components/BoardGrid";
@@ -47,6 +48,8 @@ export default async function BoardPage({
   const sections = (sectionRows ?? []) as Section[];
   const cards = (cardRows ?? []) as Card[];
   const owner = isOwner(grant);
+  const unclaimed = !board.owner_user_id;
+  const account = await currentAccount();
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12">
@@ -75,14 +78,14 @@ export default async function BoardPage({
               >
                 Board settings
               </Link>
-            ) : (
+            ) : unclaimed ? (
               <Link
-                href={`/b/${slug}/owner`}
+                href={`/b/${slug}/claim`}
                 className="text-xs hover:text-foreground"
               >
-                Owner sign in
+                {account ? "Claim this board" : "Own this board?"}
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
 

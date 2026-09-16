@@ -3,6 +3,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeToggle, THEME_SCRIPT } from "@/components/ThemeToggle";
+import { AccountMenu } from "@/components/AccountMenu";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               >
                 New board
               </Link>
+              <AccountMenu />
               <ThemeToggle />
             </div>
           </div>

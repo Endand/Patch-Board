@@ -5,14 +5,18 @@ import { createCard, type ActionResult } from "@/app/actions";
 import { CARD_TYPES, CARD_TYPE_META, type CardType } from "@/lib/cards";
 import { setDisplayName, useClientKey, useDisplayName } from "@/lib/identity";
 
+export type FieldMode = "required" | "optional" | "hidden";
+
 export function CardComposer({
   slug,
   sectionId,
   sectionName,
+  fields,
 }: {
   slug: string;
   sectionId: string;
   sectionName: string;
+  fields: { authorName: FieldMode; body: FieldMode; mediaUrl: FieldMode };
 }) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<CardType>("suggestion");
@@ -91,29 +95,40 @@ export function CardComposer({
         placeholder="One line summary"
         className="mt-3 w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
       />
-      <textarea
-        name="body"
-        rows={3}
-        maxLength={5000}
-        placeholder="Details, optional"
-        className="mt-2 w-full resize-y rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
-      />
-      <div className="mt-2 grid gap-2 sm:grid-cols-2">
-        <input
-          name="media_url"
-          type="url"
-          placeholder="Clip or image link, optional"
-          className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+      {fields.body !== "hidden" && (
+        <textarea
+          name="body"
+          rows={3}
+          maxLength={5000}
+          required={fields.body === "required"}
+          placeholder={label("Details", fields.body)}
+          className="mt-2 w-full resize-y rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
         />
-        <input
-          name="author_name"
-          maxLength={40}
-          value={name ?? storedName}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your name, optional"
-          className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-      </div>
+      )}
+      {(fields.mediaUrl !== "hidden" || fields.authorName !== "hidden") && (
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          {fields.mediaUrl !== "hidden" && (
+            <input
+              name="media_url"
+              type="url"
+              required={fields.mediaUrl === "required"}
+              placeholder={label("Clip or image link", fields.mediaUrl)}
+              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            />
+          )}
+          {fields.authorName !== "hidden" && (
+            <input
+              name="author_name"
+              maxLength={40}
+              required={fields.authorName === "required"}
+              value={name ?? storedName}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={label("Your name", fields.authorName)}
+              className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            />
+          )}
+        </div>
+      )}
 
       {state && !state.ok && (
         <p className="mt-2 text-sm text-rose-500" role="alert">
@@ -136,8 +151,17 @@ export function CardComposer({
         >
           Cancel
         </button>
-        <span className="ml-auto text-xs text-muted">No account needed</span>
+        <span className="ml-auto text-xs text-muted">
+          {fields.authorName === "required"
+            ? "A name is required on this board"
+            : "No account needed"}
+        </span>
       </div>
     </form>
   );
+}
+
+/** Placeholders say which fields the board insists on. */
+function label(base: string, mode: FieldMode): string {
+  return mode === "required" ? `${base}, required` : `${base}, optional`;
 }

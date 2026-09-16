@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/supabase";
 import { grantFor, isOwner, loadBoard } from "@/lib/access";
+import { accountsById, currentAccount, listAccounts } from "@/lib/auth";
 import type { Card, Section } from "@/lib/cards";
 import { BoardSettings } from "./BoardSettings";
 import { ModerationQueue } from "./ModerationQueue";
@@ -18,9 +19,11 @@ export default async function SettingsPage({
   const board = await loadBoard(slug);
   if (!board) notFound();
 
-  // Anyone who is not already the owner is sent to sign in, rather than shown
-  // a 404, so the owner of a public board can find their way in.
-  if (!isOwner(await grantFor(board))) redirect(`/b/${slug}/owner`);
+  // An unclaimed board can still be taken over with its owner secret.
+  // Anything else belongs to someone, so there is nothing to offer here.
+  if (!isOwner(await grantFor(board))) {
+    redirect(board.owner_user_id ? `/b/${slug}` : `/b/${slug}/claim`);
+  }
 
   const [{ data: sectionRows }, { data: cardRows }] = await Promise.all([
     db
@@ -40,6 +43,38 @@ export default async function SettingsPage({
   const sections = (sectionRows ?? []) as Section[];
   const cards = (cardRows ?? []) as Card[];
   const sectionNames = new Map(sections.map((s) => [s.id, s.name]));
+
+  const [{ data: adminRows }, accounts, me] = await Promise.all([
+    db.from("board_admins").select("user_id").eq("board_id", board.id),
+    listAccounts(),
+    currentAccount(),
+  ]);
+
+  const adminIds = (adminRows ?? []).map((r) => r.user_id as string);
+  const emails = await accountsById(
+    board.owner_user_id ? [board.owner_user_id, ...adminIds] : adminIds,
+  );
+
+  const admins = [
+    ...(board.owner_user_id
+      ? [
+          {
+            id: board.owner_user_id,
+            email: emails.get(board.owner_user_id) ?? "Unknown account",
+            primary: true,
+          },
+        ]
+      : []),
+    ...adminIds.map((id) => ({
+      id,
+      email: emails.get(id) ?? "Unknown account",
+      primary: false,
+    })),
+  ];
+
+  const candidates = accounts.filter(
+    (a) => a.id !== board.owner_user_id && !adminIds.includes(a.id),
+  );
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-12">
@@ -62,6 +97,14 @@ export default async function SettingsPage({
         subtitle={board.subtitle}
         visibility={board.visibility}
         hasPassword={Boolean(board.access_hash)}
+        fields={{
+          authorName: board.author_name_mode,
+          body: board.body_mode,
+          mediaUrl: board.media_url_mode,
+        }}
+        admins={admins}
+        candidates={candidates}
+        currentUserId={me?.id ?? null}
       />
 
       <section className="mt-12">

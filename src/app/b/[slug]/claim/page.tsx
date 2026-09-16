@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { grantFor, isOwner, loadBoard } from "@/lib/access";
-import { PasswordGate } from "@/components/PasswordGate";
+import { loadBoard } from "@/lib/access";
+import { currentAccount } from "@/lib/auth";
+import { ClaimForm } from "./ClaimForm";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Owner sign in. Public boards never show a password prompt of their own, so
- * without this page there would be no way to become the owner of one.
- */
-export default async function OwnerSignInPage({
+export default async function ClaimPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -19,7 +16,11 @@ export default async function OwnerSignInPage({
   const board = await loadBoard(slug);
   if (!board) notFound();
 
-  if (isOwner(await grantFor(board))) redirect(`/b/${slug}/settings`);
+  const account = await currentAccount();
+  if (!account) {
+    redirect(`/account/sign-in?next=${encodeURIComponent(`/b/${slug}/claim`)}`);
+  }
+  if (board.owner_user_id) redirect(`/b/${slug}`);
 
   return (
     <main className="mx-auto w-full max-w-lg px-6 py-20">
@@ -30,13 +31,13 @@ export default async function OwnerSignInPage({
         &larr; {board.name}
       </Link>
       <h1 className="mt-3 mb-1 text-2xl font-semibold tracking-tight">
-        Owner sign in
+        Claim {board.name}
       </h1>
       <p className="mb-5 text-sm text-muted">
-        Enter the owner secret for {board.name}. It was shown once when the
-        board was created.
+        This board was made before accounts existed. Enter its owner secret to
+        attach it to {account.email}.
       </p>
-      <PasswordGate slug={slug} boardName={board.name} reason="owner" />
+      <ClaimForm slug={slug} />
     </main>
   );
 }

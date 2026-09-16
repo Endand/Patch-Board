@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/supabase";
+import { currentAccount } from "@/lib/auth";
 import { CARD_TYPES, CARD_TYPE_META, type Board } from "@/lib/cards";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,19 @@ export default async function Home() {
 
   const boards = (data ?? []) as Board[];
 
+  // Your own boards are listed separately, including private ones, which are
+  // deliberately absent from the public list below.
+  const account = await currentAccount();
+  const mine = account
+    ? (((
+        await db
+          .from("boards")
+          .select("id, slug, name, subtitle, visibility")
+          .eq("owner_user_id", account.id)
+          .order("created_at", { ascending: true })
+      ).data ?? []) as Board[])
+    : [];
+
   return (
     <main className="mx-auto w-full max-w-4xl px-6 py-16">
       <header className="mb-12">
@@ -25,9 +39,39 @@ export default async function Home() {
         </p>
       </header>
 
+      {mine.length > 0 && (
+        <section className="mb-14">
+          <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-muted">
+            Your boards
+          </h2>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {mine.map((board) => (
+              <li key={board.id}>
+                <Link
+                  href={`/b/${board.slug}`}
+                  className="block rounded-lg border border-edge bg-surface p-4 transition hover:border-zinc-600"
+                >
+                  <span className="font-medium">{board.name}</span>
+                  {board.visibility !== "public" && (
+                    <span className="ml-2 rounded-full border border-edge px-1.5 py-0.5 text-[11px] text-muted">
+                      {board.visibility === "private" ? "Private" : "Locked"}
+                    </span>
+                  )}
+                  {board.subtitle && (
+                    <span className="mt-0.5 block text-sm text-muted">
+                      {board.subtitle}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="mb-14">
         <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-muted">
-          Boards
+          {mine.length > 0 ? "All boards" : "Boards"}
         </h2>
         {boards.length === 0 ? (
           <p className="text-muted">No boards yet.</p>

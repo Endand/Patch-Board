@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/supabase";
 import { isCardType, CARD_STATUSES, type CardStatus } from "@/lib/cards";
-import type { BoardRow, Grant } from "@/lib/access";
+import type { BoardRow, FieldMode, Grant } from "@/lib/access";
 import {
   canWrite,
   grantFor,
@@ -91,6 +91,23 @@ export async function createCard(
     return { ok: false, error: "Link must start with http:// or https://" };
   }
 
+  // The board decides which optional parts of a card are required. Checked
+  // here rather than only in the form, which can be bypassed.
+  const rules: [FieldMode, string, string][] = [
+    [auth.board.author_name_mode, authorName, "a name"],
+    [auth.board.body_mode, body, "some detail"],
+    [auth.board.media_url_mode, mediaUrl, "a link"],
+  ];
+  for (const [mode, value, label] of rules) {
+    if (mode === "required" && !value) {
+      return { ok: false, error: `This board asks for ${label}` };
+    }
+  }
+
+  // A hidden field is never stored, even if something posts one anyway.
+  const keep = (mode: FieldMode, value: string) =>
+    mode === "hidden" ? "" : value;
+
   // The section has to belong to this board, or a forged id could post onto
   // a board the visitor has no grant for.
   const { data: section } = await db
@@ -106,9 +123,10 @@ export async function createCard(
     section_id: sectionId,
     type,
     title,
-    body: body || null,
-    media_url: mediaUrl || null,
-    author_name: authorName.slice(0, 40) || null,
+    body: keep(auth.board.body_mode, body) || null,
+    media_url: keep(auth.board.media_url_mode, mediaUrl) || null,
+    author_name:
+      keep(auth.board.author_name_mode, authorName).slice(0, 40) || null,
     author_key: authorKey || null,
     ip_hash: await ipHash(),
   });

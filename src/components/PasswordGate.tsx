@@ -9,21 +9,14 @@ const COPY = {
     hint: "Enter the board password to view it.",
     placeholder: "Board password",
     button: "Unlock",
-    footer: "The owner secret also works here and unlocks moderation.",
+    footer: "",
   },
   write: {
     title: () => "Password needed to post",
     hint: "Anyone can read this board, but posting needs the password.",
     placeholder: "Board password",
     button: "Unlock",
-    footer: "The owner secret also works here and unlocks moderation.",
-  },
-  owner: {
-    title: () => "Owner secret",
-    hint: "",
-    placeholder: "Owner secret",
-    button: "Sign in",
-    footer: "Lost it? A board secret cannot be recovered, only replaced.",
+    footer: "",
   },
 } as const;
 
@@ -34,7 +27,7 @@ export function PasswordGate({
 }: {
   slug: string;
   boardName: string;
-  reason: "read" | "write" | "owner";
+  reason: "read" | "write";
 }) {
   const copy = COPY[reason];
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
@@ -47,14 +40,10 @@ export function PasswordGate({
       action={action}
       className="rounded-lg border border-edge bg-surface p-5"
     >
-      {reason !== "owner" && (
-        <>
-          <h2 className="font-medium">{copy.title(boardName)}</h2>
-          <p className="mt-1 text-sm text-muted">{copy.hint}</p>
-        </>
-      )}
+      <h2 className="font-medium">{copy.title(boardName)}</h2>
+      <p className="mt-1 text-sm text-muted">{copy.hint}</p>
 
-      <div className={reason === "owner" ? "flex flex-wrap gap-2" : "mt-4 flex flex-wrap gap-2"}>
+      <div className="mt-4 flex flex-wrap gap-2">
         <input
           name="password"
           type="password"
@@ -77,7 +66,9 @@ export function PasswordGate({
           {state.error}
         </p>
       )}
-      <p className="mt-3 text-xs text-muted">{copy.footer}</p>
+      {copy.footer && (
+        <p className="mt-3 text-xs text-muted">{copy.footer}</p>
+      )}
     </form>
   );
 }

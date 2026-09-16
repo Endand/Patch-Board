@@ -36,8 +36,9 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
       <div className="rounded-lg border border-edge bg-surface p-5">
         <h2 className="font-medium">Board created</h2>
         <p className="mt-2 text-sm text-muted">
-          Save this owner secret now. It is hashed in the database and cannot be
-          recovered. Enter it on the board&apos;s password prompt to moderate.
+          The board belongs to your account, so you do not need this to
+          moderate. Keep it anyway as a recovery code: it is hashed in the
+          database and cannot be shown again.
         </p>
         <p className="mt-3 rounded border border-edge bg-background px-3 py-2 font-mono text-lg">
           {state.ownerSecret}
@@ -125,16 +126,6 @@ export function NewBoardForm({ templates }: { templates: Template[] }) {
           />
         </Field>
       )}
-
-      <Field label="Admin secret" hint="Site wide, only you have it">
-        <input
-          name="admin_secret"
-          type="password"
-          required
-          autoComplete="off"
-          className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-      </Field>
 
       {state && !state.ok && (
         <p className="text-sm text-rose-500" role="alert">

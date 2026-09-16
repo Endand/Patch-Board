@@ -4,7 +4,7 @@ import { db } from "@/lib/supabase";
 import { canRead, canWrite, grantFor, isOwner, loadBoard } from "@/lib/access";
 import { CARD_TYPE_META, type Card, type Section } from "@/lib/cards";
 import { CardComposer } from "@/components/CardComposer";
-import { CardItem } from "@/components/CardItem";
+import { SectionCards } from "@/components/SectionCards";
 import { PasswordGate } from "@/components/PasswordGate";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +78,11 @@ export default async function SectionPage({
             slug={slug}
             sectionId={section.id}
             sectionName={section.name}
+            fields={{
+              authorName: board.author_name_mode,
+              body: board.body_mode,
+              mediaUrl: board.media_url_mode,
+            }}
           />
         ) : (
           <PasswordGate slug={slug} boardName={board.name} reason="write" />
@@ -89,17 +94,12 @@ export default async function SectionPage({
           Nothing here yet. {writable && "Be the first."}
         </p>
       ) : (
-        <div className="space-y-3">
-          {cards.map((card) => (
-            <CardItem
-              key={card.id}
-              card={card}
-              slug={slug}
-              canVote={writable}
-              isOwner={isOwner(grant)}
-            />
-          ))}
-        </div>
+        <SectionCards
+          slug={slug}
+          cards={cards}
+          canVote={writable}
+          isOwner={isOwner(grant)}
+        />
       )}
 
       <footer className="mt-12 flex flex-wrap gap-3 text-xs text-muted">
