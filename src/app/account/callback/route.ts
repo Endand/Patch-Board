@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { authClient } from "@/lib/auth";
 
@@ -21,9 +22,24 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await authClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(`${origin}/account/sign-in?error=link`);
+  }
+
+  // A link that came back as a different account did not link anything: it
+  // signed in as somebody new. Undo it rather than leaving the person looking
+  // at an empty home page wondering where their boards went.
+  const jar = await cookies();
+  const initiator = jar.get("pb_linking")?.value;
+  if (initiator) {
+    jar.delete("pb_linking");
+    if (data.user && data.user.id !== initiator) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(
+        `${origin}/account/sign-in?error=separate`,
+      );
+    }
   }
 
   return NextResponse.redirect(`${origin}${destination}`);

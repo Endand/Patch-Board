@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authClient, currentAccount, isProvider } from "@/lib/auth";
 
@@ -59,6 +60,18 @@ export async function linkProvider(formData: FormData) {
   const account = await currentAccount();
   if (!account) redirect("/account/sign-in?next=%2Faccount");
   if (account.providers.includes(provider)) redirect("/account");
+
+  // Remember who started this. If the round trip comes back as somebody
+  // else, the link did not happen and we signed into a new account instead,
+  // which is worth catching rather than silently swapping accounts.
+  const jar = await cookies();
+  jar.set("pb_linking", account.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 600,
+  });
 
   const supabase = await authClient();
   const { data, error } = await supabase.auth.linkIdentity({

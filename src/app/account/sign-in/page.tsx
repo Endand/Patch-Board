@@ -11,6 +11,8 @@ const MESSAGE: Record<string, string> = {
   start: "Could not reach that service. Try again.",
   link: "That sign in link had expired. Try again.",
   provider: "Unknown sign in method.",
+  separate:
+    "That service belongs to a different account, so nothing was linked and you have been signed out. Sign in the way you normally do, then link from your account page.",
 };
 
 export default async function SignInPage({
@@ -54,8 +56,19 @@ export default async function SignInPage({
 
         <p className="pt-2 text-xs text-muted">
           No password to set or lose. Patch Board sees your username and
-          nothing else. Already have an account? Sign in the same way you did
-          before, then link the other service from your account page.
+          nothing else.
+        </p>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-edge bg-surface-2 p-4 text-xs text-muted">
+        <p className="font-medium text-foreground">
+          Already have an account?
+        </p>
+        <p className="mt-1">
+          Use the same service you signed in with before. Picking the other one
+          creates a second, separate account that owns none of your boards. To
+          use both, sign in the usual way first, then link the other from your
+          account page.
         </p>
       </div>
     </main>
