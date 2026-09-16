@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Your account" };
 
 const MESSAGE: Record<string, string> = {
-  linking: "Linking is turned off for this project. Enable manual linking in Supabase first.",
+  linking: "Could not start linking.",
   last: "That is the only way into this account, so it cannot be removed.",
   provider: "Unknown sign in method.",
 };
@@ -23,12 +23,12 @@ const MESSAGE: Record<string, string> = {
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; why?: string }>;
 }) {
   const account = await currentAccount();
   if (!account) redirect("/account/sign-in?next=%2Faccount");
 
-  const { error } = await searchParams;
+  const { error, why } = await searchParams;
 
   const [{ count: boardCount }, { count: orgCount }] = await Promise.all([
     db
@@ -50,9 +50,15 @@ export default async function AccountPage({
       </p>
 
       {error && MESSAGE[error] && (
-        <p className="mb-6 rounded-lg border border-rose-500/40 px-3 py-2 text-sm text-rose-500" role="alert">
-          {MESSAGE[error]}
-        </p>
+        <div
+          className="mb-6 rounded-lg border border-rose-500/40 px-3 py-2 text-sm text-rose-500"
+          role="alert"
+        >
+          <p>{MESSAGE[error]}</p>
+          {why && (
+            <p className="mt-1 font-mono text-xs opacity-80">{why}</p>
+          )}
+        </div>
       )}
 
       <section className="panel p-5">

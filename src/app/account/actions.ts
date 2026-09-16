@@ -68,9 +68,14 @@ export async function linkProvider(formData: FormData) {
     },
   });
 
-  // Manual linking is a project setting. Say so plainly rather than failing
-  // with a blank screen.
-  if (error || !data?.url) redirect("/account?error=linking");
+  // Carry the real reason through rather than a generic failure. Manual
+  // linking being switched off is only one of several things that land here,
+  // and guessing wastes everyone's time.
+  if (error || !data?.url) {
+    const reason = error?.message ?? "No redirect URL came back";
+    console.error("[link]", provider, reason);
+    redirect(`/account?error=linking&why=${encodeURIComponent(reason)}`);
+  }
   redirect(data.url);
 }
 
