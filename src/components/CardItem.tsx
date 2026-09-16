@@ -6,6 +6,7 @@ import {
   CARD_STATUSES,
   CARD_TYPE_META,
   STATUS_LABEL,
+  formatDate,
   type Card,
 } from "@/lib/cards";
 import { setVoted, useClientKey, useHasVoted } from "@/lib/identity";
@@ -95,7 +96,7 @@ export function CardItem({
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted">
           <span>{card.author_name || "Anonymous"}</span>
           <time dateTime={card.created_at}>
-            {new Date(card.created_at).toLocaleDateString()}
+            {formatDate(card.created_at)}
           </time>
 
           {isOwner && (

@@ -120,3 +120,23 @@ export function groupSections(sections: Section[]) {
   }
   return groups;
 }
+
+/**
+ * Dates are formatted identically on the server and in the browser.
+ *
+ * toLocaleDateString() would use each runtime's own locale and time zone, so
+ * the same card could render "9/15/2026" on the server and "15/09/2026" in
+ * the browser, which is a hydration mismatch. In production the server runs in
+ * UTC and the visitor does not, so cards near midnight would disagree on the
+ * day as well. Pinning both settings makes the output deterministic.
+ */
+const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+export function formatDate(iso: string): string {
+  return DATE_FORMAT.format(new Date(iso));
+}
