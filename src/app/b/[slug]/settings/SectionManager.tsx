@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { GroupPicker } from "./GroupPicker";
+import { ClearSection } from "@/components/ClearSection";
 import {
   addSection,
   deleteSection,
@@ -173,9 +174,17 @@ function Row({
             {section.name}
           </span>
           {section.cardCount > 0 && (
-            <span className="text-xs text-muted">
-              {section.cardCount} {section.cardCount === 1 ? "card" : "cards"}
-            </span>
+            <>
+              <span className="text-xs text-muted">
+                {section.cardCount} {section.cardCount === 1 ? "card" : "cards"}
+              </span>
+              <ClearSection
+                slug={slug}
+                sectionId={section.id}
+                sectionName={section.name}
+                count={section.cardCount}
+              />
+            </>
           )}
 
           <span className="ml-auto flex items-center gap-1 text-xs text-muted">

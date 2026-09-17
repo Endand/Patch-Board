@@ -260,6 +260,39 @@ export async function deleteAllCards(
   return { ok: true };
 }
 
+/**
+ * Remove every card in one section, leaving the rest of the board alone.
+ *
+ * The middle ground between deleting one card and clearing the whole board:
+ * useful when a single move has been reworked and its old feedback no longer
+ * describes anything real.
+ */
+export async function deleteSectionCards(
+  slug: string,
+  sectionId: string,
+): Promise<ActionResult> {
+  const auth = await authorize(slug, "owner");
+  if (!auth.ok) return auth;
+
+  const { data: section } = await db
+    .from("sections")
+    .select("id")
+    .eq("id", sectionId)
+    .eq("board_id", auth.board.id)
+    .maybeSingle();
+  if (!section) return { ok: false, error: "Unknown section" };
+
+  const { error } = await db
+    .from("cards")
+    .delete()
+    .eq("section_id", sectionId)
+    .eq("board_id", auth.board.id);
+  if (error) return { ok: false, error: "Could not clear that section" };
+
+  revalidatePath(`/b/${slug}`, "layout");
+  return { ok: true };
+}
+
 export async function deleteCard(
   slug: string,
   cardId: string,

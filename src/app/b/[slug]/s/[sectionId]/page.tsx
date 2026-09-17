@@ -6,6 +6,7 @@ import type { Card, Section } from "@/lib/cards";
 import { CardComposer } from "@/components/CardComposer";
 import { SectionCards } from "@/components/SectionCards";
 import { PasswordGate } from "@/components/PasswordGate";
+import { ClearSection } from "@/components/ClearSection";
 
 export const dynamic = "force-dynamic";
 
@@ -74,9 +75,19 @@ export default async function SectionPage({
           <h1 className="text-3xl font-semibold tracking-tight">
             {section.name}
           </h1>
-          <p className="text-sm text-muted">
-            {cards.length} {cards.length === 1 ? "note" : "notes"}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm text-muted">
+              {cards.length} {cards.length === 1 ? "note" : "notes"}
+            </p>
+            {isOwner(grant) && (
+              <ClearSection
+                slug={slug}
+                sectionId={section.id}
+                sectionName={section.name}
+                count={cards.length}
+              />
+            )}
+          </div>
         </div>
       </header>
 
