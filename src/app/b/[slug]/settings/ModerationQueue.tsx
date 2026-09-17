@@ -9,6 +9,7 @@ import {
   formatDate,
   type Card,
 } from "@/lib/cards";
+import { CardEditForm } from "@/components/CardEditForm";
 
 export function ModerationQueue({
   slug,
@@ -49,7 +50,9 @@ function Row({
   const meta = CARD_TYPE_META[card.type];
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [pending, start] = useTransition();
+  const edited = card.updated_at && card.updated_at !== card.created_at;
 
   return (
     <li className="relative overflow-hidden rounded-lg border border-edge bg-surface py-3 pl-5 pr-3">
@@ -68,20 +71,43 @@ function Row({
         <span className="text-xs text-muted">{sectionName}</span>
         <span className="ml-auto text-xs text-muted">
           ▲ {card.vote_count} · {formatDate(card.created_at)}
+          {edited ? " · edited" : ""}
         </span>
       </div>
 
-      <p className="mt-2 font-medium">{card.title}</p>
-      {card.body && (
-        <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
-          {card.body}
-        </p>
+      {editing ? (
+        <div className="mt-3">
+          <CardEditForm
+            slug={slug}
+            card={card}
+            onDone={() => setEditing(false)}
+          />
+        </div>
+      ) : (
+        <>
+          <p className="mt-2 font-medium">{card.title}</p>
+          {card.body && (
+            <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
+              {card.body}
+            </p>
+          )}
+        </>
       )}
 
       <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted">
         <span>{card.author_name || "Anonymous"}</span>
 
-        <label className="ml-auto flex items-center gap-1">
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="ml-auto hover:text-foreground"
+          >
+            Edit
+          </button>
+        )}
+
+        <label className="flex items-center gap-1">
           <span className="sr-only">Status</span>
           <select
             defaultValue={card.status}

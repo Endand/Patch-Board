@@ -136,6 +136,65 @@ export async function createCard(
   return { ok: true };
 }
 
+/**
+ * Edit a card's wording.
+ *
+ * Admins only. Feedback is somebody else's words, so this exists for fixing a
+ * typo, tightening a vague title or trimming something that does not belong,
+ * not for rewriting what a person said. The edit time is recorded and shown
+ * on the card so a change is never invisible to whoever wrote it.
+ */
+export async function updateCard(
+  slug: string,
+  cardId: string,
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const auth = await authorize(slug, "owner");
+  if (!auth.ok) return auth;
+
+  const type = String(formData.get("type") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  const mediaUrl = String(formData.get("media_url") ?? "").trim();
+
+  if (!isCardType(type)) return { ok: false, error: "Pick a feedback type" };
+  if (!title) return { ok: false, error: "Give it a title" };
+  if (title.length > 200) return { ok: false, error: "Title is too long" };
+  if (body.length > 5000) return { ok: false, error: "Body is too long" };
+  if (mediaUrl && !/^https?:\/\//i.test(mediaUrl)) {
+    return { ok: false, error: "Link must start with http:// or https://" };
+  }
+
+  // The board's own rules still apply, so an edit cannot strip a field the
+  // board insists on.
+  const rules: [FieldMode, string, string][] = [
+    [auth.board.body_mode, body, "some detail"],
+    [auth.board.media_url_mode, mediaUrl, "a link"],
+  ];
+  for (const [mode, value, label] of rules) {
+    if (mode === "required" && !value) {
+      return { ok: false, error: `This board asks for ${label}` };
+    }
+  }
+
+  const { error } = await db
+    .from("cards")
+    .update({
+      type,
+      title,
+      body: body || null,
+      media_url: mediaUrl || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", cardId)
+    .eq("board_id", auth.board.id);
+  if (error) return { ok: false, error: "Could not save that" };
+
+  revalidatePath(`/b/${slug}`, "layout");
+  return { ok: true };
+}
+
 export async function deleteCard(
   slug: string,
   cardId: string,

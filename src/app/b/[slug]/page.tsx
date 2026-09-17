@@ -39,7 +39,7 @@ export default async function BoardPage({
     db
       .from("cards")
       .select(
-        "id, section_id, type, status, title, body, media_url, author_name, author_key, vote_count, created_at",
+        "id, section_id, type, status, title, body, media_url, author_name, author_key, vote_count, created_at, updated_at",
       )
       .eq("board_id", board.id)
       .order("vote_count", { ascending: false }),

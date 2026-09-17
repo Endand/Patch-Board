@@ -61,6 +61,10 @@ the owner can delete the board.
 Admins are invited by typing a username rather than picking from a list, so
 nothing on the page reveals who else has an account.
 
+Admins can also edit the wording of any card, from the board's moderation
+queue or from the card itself. An edited card is marked as such, so a change
+is never invisible to whoever wrote it.
+
 `/b/<board>/settings` covers renaming, visibility, setting or clearing the
 access password at any time, which parts of a card the board requires, the
 admin list, a replacement owner secret, and a moderation queue over every card.

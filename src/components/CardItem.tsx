@@ -10,6 +10,7 @@ import {
   type Card,
 } from "@/lib/cards";
 import { setVoted, useClientKey, useHasVoted } from "@/lib/identity";
+import { CardEditForm } from "@/components/CardEditForm";
 
 export function CardItem({
   card,
@@ -26,9 +27,11 @@ export function CardItem({
   const key = useClientKey();
   const voted = useHasVoted(card.id);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const [pending, start] = useTransition();
 
   const mine = Boolean(key) && card.author_key === key;
+  const edited = card.updated_at && card.updated_at !== card.created_at;
 
   function vote() {
     start(async () => {
@@ -76,21 +79,33 @@ export function CardItem({
           </span>
         </div>
 
-        <h3 className="mt-2 font-medium">{card.title}</h3>
-        {card.body && (
-          <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
-            {card.body}
-          </p>
-        )}
-        {card.media_url && (
-          <a
-            href={card.media_url}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="mt-2 inline-block text-sm underline underline-offset-2"
-          >
-            Attached link
-          </a>
+        {editing ? (
+          <div className="mt-3">
+            <CardEditForm
+              slug={slug}
+              card={card}
+              onDone={() => setEditing(false)}
+            />
+          </div>
+        ) : (
+          <>
+            <h3 className="mt-2 font-medium">{card.title}</h3>
+            {card.body && (
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
+                {card.body}
+              </p>
+            )}
+            {card.media_url && (
+              <a
+                href={card.media_url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="mt-2 inline-block text-sm underline underline-offset-2"
+              >
+                Attached link
+              </a>
+            )}
+          </>
         )}
 
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted">
@@ -98,9 +113,24 @@ export function CardItem({
           <time dateTime={card.created_at}>
             {formatDate(card.created_at)}
           </time>
+          {edited && (
+            <span title={`Edited by an admin on ${formatDate(card.updated_at)}`}>
+              edited
+            </span>
+          )}
+
+          {isOwner && !editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="ml-auto hover:text-foreground"
+            >
+              Edit
+            </button>
+          )}
 
           {isOwner && (
-            <label className="ml-auto flex items-center gap-1">
+            <label className="flex items-center gap-1">
               <span className="sr-only">Status</span>
               <select
                 defaultValue={card.status}

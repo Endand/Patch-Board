@@ -105,6 +105,7 @@ export type Card = {
   author_key: string | null;
   vote_count: number;
   created_at: string;
+  updated_at: string;
 };
 
 /** Sections in board order, bundled under their group header. */
