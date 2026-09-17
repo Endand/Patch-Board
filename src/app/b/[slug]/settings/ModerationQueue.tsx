@@ -8,16 +8,19 @@ import {
   STATUS_LABEL,
   formatDate,
   type Card,
+  type Section,
 } from "@/lib/cards";
 import { CardEditForm } from "@/components/CardEditForm";
 
 export function ModerationQueue({
   slug,
   cards,
+  sections,
   sectionNames,
 }: {
   slug: string;
   cards: Card[];
+  sections: Section[];
   sectionNames: Record<string, string>;
 }) {
   if (cards.length === 0) {
@@ -31,6 +34,7 @@ export function ModerationQueue({
           key={card.id}
           card={card}
           slug={slug}
+          sections={sections}
           sectionName={sectionNames[card.section_id] ?? "Unknown section"}
         />
       ))}
@@ -41,10 +45,12 @@ export function ModerationQueue({
 function Row({
   card,
   slug,
+  sections,
   sectionName,
 }: {
   card: Card;
   slug: string;
+  sections: Section[];
   sectionName: string;
 }) {
   const meta = CARD_TYPE_META[card.type];
@@ -80,6 +86,7 @@ function Row({
           <CardEditForm
             slug={slug}
             card={card}
+            sections={sections}
             onDone={() => setEditing(false)}
           />
         </div>

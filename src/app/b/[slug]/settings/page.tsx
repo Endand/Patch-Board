@@ -7,6 +7,7 @@ import type { Card, Section } from "@/lib/cards";
 import { BoardSettings } from "./BoardSettings";
 import { ModerationQueue } from "./ModerationQueue";
 import { SectionManager } from "./SectionManager";
+import { ClearFeedback } from "./ClearFeedback";
 
 export const dynamic = "force-dynamic";
 
@@ -124,8 +125,10 @@ export default async function SettingsPage({
         <ModerationQueue
           slug={slug}
           cards={cards}
+          sections={sections}
           sectionNames={Object.fromEntries(sectionNames)}
         />
+        {cards.length > 0 && <ClearFeedback slug={slug} count={cards.length} />}
       </section>
     </main>
   );

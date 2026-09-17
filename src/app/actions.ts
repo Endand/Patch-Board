@@ -195,6 +195,71 @@ export async function updateCard(
   return { ok: true };
 }
 
+/**
+ * Move a card to a different section of the same board.
+ *
+ * Feedback lands in the wrong place constantly, usually in General because
+ * whoever wrote it did not know which move it belonged to. Moving it keeps
+ * the votes and the wording, which reposting would lose.
+ */
+export async function moveCard(
+  slug: string,
+  cardId: string,
+  sectionId: string,
+): Promise<ActionResult> {
+  const auth = await authorize(slug, "owner");
+  if (!auth.ok) return auth;
+
+  // The destination has to be on this board, or a forged id could fling a
+  // card onto a board the admin has no rights over.
+  const { data: section } = await db
+    .from("sections")
+    .select("id")
+    .eq("id", sectionId)
+    .eq("board_id", auth.board.id)
+    .maybeSingle();
+  if (!section) return { ok: false, error: "Unknown section" };
+
+  const { error } = await db
+    .from("cards")
+    .update({ section_id: sectionId })
+    .eq("id", cardId)
+    .eq("board_id", auth.board.id);
+  if (error) return { ok: false, error: "Could not move that card" };
+
+  revalidatePath(`/b/${slug}`, "layout");
+  return { ok: true };
+}
+
+/**
+ * Remove every card on the board in one go.
+ *
+ * Kept separate from deleting the board because clearing a round of feedback
+ * and starting again is a normal thing to want, and rebuilding 27 sections is
+ * not. Sections, settings and admins all survive.
+ */
+export async function deleteAllCards(
+  slug: string,
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const auth = await authorize(slug, "owner");
+  if (!auth.ok) return auth;
+
+  if (String(formData.get("confirm") ?? "").trim().toLowerCase() !== "delete all") {
+    return { ok: false, error: 'Type "delete all" to confirm' };
+  }
+
+  const { error } = await db
+    .from("cards")
+    .delete()
+    .eq("board_id", auth.board.id);
+  if (error) return { ok: false, error: "Could not clear the board" };
+
+  revalidatePath(`/b/${slug}`, "layout");
+  return { ok: true };
+}
+
 export async function deleteCard(
   slug: string,
   cardId: string,

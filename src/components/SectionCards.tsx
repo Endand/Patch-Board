@@ -8,6 +8,7 @@ import {
   type Card,
   type CardStatus,
   type CardType,
+  type Section,
 } from "@/lib/cards";
 import { CardItem } from "@/components/CardItem";
 
@@ -17,11 +18,13 @@ const RESOLVED: CardStatus[] = ["acknowledged", "fixed", "wontfix"];
 export function SectionCards({
   slug,
   cards,
+  sections,
   canVote,
   isOwner,
 }: {
   slug: string;
   cards: Card[];
+  sections: Section[];
   canVote: boolean;
   isOwner: boolean;
 }) {
@@ -151,6 +154,7 @@ export function SectionCards({
               key={card.id}
               card={card}
               slug={slug}
+              sections={sections}
               canVote={canVote}
               isOwner={isOwner}
             />

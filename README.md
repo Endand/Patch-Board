@@ -62,8 +62,14 @@ Admins are invited by typing a username rather than picking from a list, so
 nothing on the page reveals who else has an account.
 
 Admins can also edit the wording of any card, from the board's moderation
-queue or from the card itself. An edited card is marked as such, so a change
-is never invisible to whoever wrote it.
+queue or from the card itself, and move a card to a different section when it
+was filed in the wrong place. Moving keeps its votes, which reposting would
+lose. An edited card is marked as such, so a change is never invisible to
+whoever wrote it.
+
+Board settings can clear every card in one go, separately from deleting the
+board: sections, settings and admins survive, so a new round of feedback
+starts on the same structure.
 
 `/b/<board>/settings` covers renaming, visibility, setting or clearing the
 access password at any time, which parts of a card the board requires, the

@@ -1,19 +1,30 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { updateCard, type ActionResult } from "@/app/actions";
-import { CARD_TYPES, CARD_TYPE_META, type Card, type CardType } from "@/lib/cards";
+import { useActionState, useState, useTransition } from "react";
+import { moveCard, updateCard, type ActionResult } from "@/app/actions";
+import {
+  CARD_TYPES,
+  CARD_TYPE_META,
+  type Card,
+  type CardType,
+  type Section,
+} from "@/lib/cards";
 
 export function CardEditForm({
   slug,
   card,
+  sections,
   onDone,
 }: {
   slug: string;
   card: Card;
+  /** Every section on the board, so a misfiled card can be moved. */
+  sections: Section[];
   onDone: () => void;
 }) {
   const [type, setType] = useState<CardType>(card.type);
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const [moving, startMove] = useTransition();
 
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     async (prev, formData) => {
@@ -78,6 +89,38 @@ export function CardEditForm({
         placeholder="Clip or image link"
         className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
       />
+
+      {sections.length > 1 && (
+        <label className="flex flex-wrap items-center gap-2 pt-1 text-xs text-muted">
+          <span>Section</span>
+          <select
+            defaultValue={card.section_id}
+            disabled={moving}
+            onChange={(e) =>
+              startMove(async () => {
+                const result = await moveCard(slug, card.id, e.target.value);
+                setMoveError(result.ok ? null : result.error);
+              })
+            }
+            className="min-w-0 flex-1 rounded border border-edge bg-background px-2 py-1.5 text-sm text-foreground"
+          >
+            {sections.map((section) => (
+              <option key={section.id} value={section.id}>
+                {section.group_name
+                  ? `${section.group_name} · ${section.name}`
+                  : section.name}
+              </option>
+            ))}
+          </select>
+          {moving && <span>Moving...</span>}
+        </label>
+      )}
+
+      {moveError && (
+        <p className="text-sm text-rose-500" role="alert">
+          {moveError}
+        </p>
+      )}
 
       {state && !state.ok && (
         <p className="text-sm text-rose-500" role="alert">

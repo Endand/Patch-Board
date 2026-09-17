@@ -8,6 +8,7 @@ import {
   STATUS_LABEL,
   formatDate,
   type Card,
+  type Section,
 } from "@/lib/cards";
 import { setVoted, useClientKey, useHasVoted } from "@/lib/identity";
 import { CardEditForm } from "@/components/CardEditForm";
@@ -15,11 +16,13 @@ import { CardEditForm } from "@/components/CardEditForm";
 export function CardItem({
   card,
   slug,
+  sections,
   canVote,
   isOwner,
 }: {
   card: Card;
   slug: string;
+  sections: Section[];
   canVote: boolean;
   isOwner: boolean;
 }) {
@@ -84,6 +87,7 @@ export function CardItem({
             <CardEditForm
               slug={slug}
               card={card}
+              sections={sections}
               onDone={() => setEditing(false)}
             />
           </div>

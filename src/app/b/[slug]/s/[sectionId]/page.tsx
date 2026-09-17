@@ -37,6 +37,12 @@ export default async function SectionPage({
     .maybeSingle<Section>();
   if (!section) notFound();
 
+  const { data: allSections } = await db
+    .from("sections")
+    .select("id, group_name, name, position, is_hidden")
+    .eq("board_id", board.id)
+    .order("position");
+
   const { data: cardRows } = await db
     .from("cards")
     .select(
@@ -104,6 +110,7 @@ export default async function SectionPage({
         <SectionCards
           slug={slug}
           cards={cards}
+          sections={(allSections ?? []) as Section[]}
           canVote={writable}
           isOwner={isOwner(grant)}
         />
