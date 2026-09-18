@@ -112,7 +112,7 @@ export function CardComposer({
               name="media_url"
               type="url"
               required={fields.mediaUrl === "required"}
-              placeholder={label("Clip or image link", fields.mediaUrl)}
+              placeholder={label("Clip link: YouTube, Streamable, Twitch or image", fields.mediaUrl)}
               className="w-full rounded border border-edge bg-background px-3 py-2 text-sm outline-none focus:border-edge-strong"
             />
           )}

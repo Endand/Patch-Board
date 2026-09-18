@@ -12,6 +12,7 @@ import {
 } from "@/lib/cards";
 import { setVoted, useClientKey, useHasVoted } from "@/lib/identity";
 import { CardEditForm } from "@/components/CardEditForm";
+import { MediaEmbed } from "@/components/MediaEmbed";
 
 export function CardItem({
   card,
@@ -99,16 +100,7 @@ export function CardItem({
                 {card.body}
               </p>
             )}
-            {card.media_url && (
-              <a
-                href={card.media_url}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="mt-2 inline-block text-sm underline underline-offset-2"
-              >
-                Attached link
-              </a>
-            )}
+            {card.media_url && <MediaEmbed url={card.media_url} />}
           </>
         )}
 
